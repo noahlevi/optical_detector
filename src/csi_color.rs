@@ -9,6 +9,7 @@ mod imp {
     use std::sync::mpsc::{self, Receiver};
     use std::sync::Arc;
     use std::thread::{self, JoinHandle};
+    use std::time::Duration;
     use v4l::buffer::Type as BufferType;
     use v4l::io::traits::CaptureStream;
     use v4l::prelude::MmapStream;
