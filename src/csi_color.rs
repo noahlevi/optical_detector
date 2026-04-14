@@ -39,6 +39,10 @@ impl CsiColorCamera {
             .downcast::<AppSink>()
             .map_err(|_| "failed to downcast to AppSink")?;
 
+        sink.set_property("max-buffers", 1u32);
+        sink.set_property("drop", true);
+        sink.set_property("wait-on-eos", false);
+
         let (sync_tx, sync_rx) = std::sync::mpsc::channel::<i64>();
 
         // Start GPIO SYNC listener
