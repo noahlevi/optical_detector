@@ -77,6 +77,7 @@ mod imp {
                                 return;
                             }
                         };
+                        stream.set_timeout(Duration::from_secs(1));
 
                         tracing::info!(
                             "capturing from {} as RG10 {}x{} @ {} fps with {} buffers",
@@ -86,10 +87,18 @@ mod imp {
                             fps,
                             buffer_count
                         );
+                        tracing::debug!("waiting for first V4L2 frame");
 
                         while !stop_capture.load(Ordering::Relaxed) {
                             let (data, _meta) = match stream.next() {
                                 Ok(frame) => frame,
+                                Err(error) if error.kind() == std::io::ErrorKind::TimedOut => {
+                                    tracing::warn!(
+                                        "V4L2 capture timed out waiting for frame from {}",
+                                        device_path
+                                    );
+                                    continue;
+                                }
                                 Err(error) => {
                                     tracing::error!("V4L2 capture failed: {error}");
                                     break;
