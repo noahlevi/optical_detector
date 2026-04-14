@@ -2,6 +2,8 @@ use chrono::{DateTime, Utc};
 use gstreamer::prelude::*;
 use gstreamer_app::AppSink;
 
+const DEFAULT_EXPOSURE_NS: u64 = 1_000_000;
+
 pub struct CsiColorCamera {
     frame_rx: std::sync::mpsc::Receiver<(DateTime<Utc>, Vec<u8>)>,
     pipeline: gstreamer::Pipeline,
@@ -55,6 +57,10 @@ impl CsiColorCamera {
                     tracing::warn!("GPIO SYNC listener exited");
                 })
                 .expect("failed to spawn GPIO SYNC thread");
+        }
+
+        if let Some(source) = pipeline.by_name("cam") {
+            configure_source(&source);
         }
 
         pipeline.set_state(gstreamer::State::Playing)?;
@@ -140,6 +146,49 @@ impl CsiColorCamera {
             self.af = None;
         }
     }*/
+}
+
+fn configure_source(source: &gstreamer::Element) {
+    let exposure_ns = std::env::var("CAM_EXPOSURE_NS")
+        .ok()
+        .and_then(|value| value.parse::<u64>().ok())
+        .unwrap_or(DEFAULT_EXPOSURE_NS);
+    let ae_lock = env_flag("CAM_AE_LOCK").unwrap_or(true);
+    let awb_lock = env_flag("CAM_AWB_LOCK");
+
+    if source.find_property("exposuretimerange").is_some() {
+        let exposure_range = format!("{exposure_ns} {exposure_ns}");
+        source.set_property_from_str("exposuretimerange", &exposure_range);
+        tracing::info!("camera exposuretimerange={exposure_range}");
+    } else {
+        tracing::warn!("nvarguscamerasrc has no exposuretimerange property");
+    }
+
+    if source.find_property("aelock").is_some() {
+        source.set_property("aelock", ae_lock);
+        tracing::info!("camera aelock={ae_lock}");
+    } else {
+        tracing::warn!("nvarguscamerasrc has no aelock property");
+    }
+
+    if let Some(awb_lock) = awb_lock {
+        if source.find_property("awblock").is_some() {
+            source.set_property("awblock", awb_lock);
+            tracing::info!("camera awblock={awb_lock}");
+        } else {
+            tracing::warn!("nvarguscamerasrc has no awblock property");
+        }
+    }
+}
+
+fn env_flag(name: &str) -> Option<bool> {
+    std::env::var(name)
+        .ok()
+        .and_then(|value| match value.as_str() {
+            "1" | "true" | "TRUE" | "yes" | "YES" | "on" | "ON" => Some(true),
+            "0" | "false" | "FALSE" | "no" | "NO" | "off" | "OFF" => Some(false),
+            _ => None,
+        })
 }
 
 impl Drop for CsiColorCamera {
