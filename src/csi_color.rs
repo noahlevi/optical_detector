@@ -1,338 +1,349 @@
 use chrono::{DateTime, Utc};
-use gstreamer::prelude::*;
-use gstreamer_app::AppSink;
 
-const DEFAULT_EXPOSURE_NS: u64 = 1_000_000;
-const DEFAULT_TNR_MODE: i32 = 0;
-const DEFAULT_EE_MODE: i32 = 0;
+#[cfg(target_os = "linux")]
+mod imp {
+    use super::*;
+    use std::fs::File;
+    use std::os::fd::AsRawFd;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::mpsc::{self, Receiver};
+    use std::sync::Arc;
+    use std::thread::{self, JoinHandle};
+    use v4l::buffer::Type as BufferType;
+    use v4l::io::traits::CaptureStream;
+    use v4l::prelude::MmapStream;
+    use v4l::video::Capture;
+    use v4l::{control, Device, Format, FourCC};
 
-pub struct CsiColorCamera {
-    frame_rx: std::sync::mpsc::Receiver<(DateTime<Utc>, Vec<u8>)>,
-    pipeline: gstreamer::Pipeline,
-    width: u32,
-    height: u32,
-}
+    const DEFAULT_CAPTURE_BUFFERS: u32 = 4;
+    const DEFAULT_EXPOSURE_US: i64 = 1_000;
+    const CONTROL_GAIN: u32 = 0x009a2009;
+    const CONTROL_EXPOSURE: u32 = 0x009a200a;
+    const CONTROL_FRAME_RATE: u32 = 0x009a200b;
+    const CONTROL_BYPASS_MODE: u32 = 0x009a2064;
+    const CONTROL_OVERRIDE_ENABLE: u32 = 0x009a2065;
+    const CONTROL_LOW_LATENCY_MODE: u32 = 0x009a206d;
 
-impl CsiColorCamera {
-    /// `gpio_chip` / `gpio_line`: SYNC output from camera (e.g. "gpiochip0", 144).
-    pub fn new(
-        sensor_id: u32,
+    pub struct CsiColorCamera {
+        frame_rx: Receiver<(DateTime<Utc>, Vec<u8>)>,
+        stop: Arc<AtomicBool>,
+        capture_thread: Option<JoinHandle<()>>,
         width: u32,
         height: u32,
-        fps: u32,
-        gpio_chip: &str,
-        gpio_line: u32,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
-        gstreamer::init()?;
+    }
 
-        let pipeline_str = format!(
-            "nvarguscamerasrc name=cam sensor-id={sensor_id} ! \
-             video/x-raw(memory:NVMM),width={width},height={height},framerate={fps}/1 ! \
-             nvvidconv ! \
-             video/x-raw,format=NV12 ! \
-             appsink name=sink sync=false",
-        );
+    impl CsiColorCamera {
+        pub fn new(
+            sensor_id: u32,
+            width: u32,
+            height: u32,
+            fps: u32,
+            gpio_chip: &str,
+            gpio_line: u32,
+        ) -> Result<Self, Box<dyn std::error::Error>> {
+            let device_path = camera_device_path(sensor_id);
+            let mut device = Device::with_path(&device_path)?;
 
-        let pipeline = gstreamer::parse::launch(&pipeline_str)?
-            .downcast::<gstreamer::Pipeline>()
-            .map_err(|_| "failed to downcast to Pipeline")?;
+            configure_format(&mut device, width, height)?;
+            configure_controls(&device, fps)?;
 
-        let sink = pipeline
-            .by_name("sink")
-            .unwrap()
-            .downcast::<AppSink>()
-            .map_err(|_| "failed to downcast to AppSink")?;
-
-        sink.set_property("max-buffers", 1u32);
-        sink.set_property("drop", true);
-        sink.set_property("wait-on-eos", false);
-
-        let (sync_tx, sync_rx) = std::sync::mpsc::channel::<i64>();
-
-        // Start GPIO SYNC listener
-        {
+            let (sync_tx, sync_rx) = mpsc::channel::<i64>();
             let chip = gpio_chip.to_string();
-            std::thread::Builder::new()
+            thread::Builder::new()
                 .name("gpio-sync".into())
                 .spawn(move || {
                     gpio_sync_listener(&chip, gpio_line, &sync_tx);
                     tracing::warn!("GPIO SYNC listener exited");
-                })
-                .expect("failed to spawn GPIO SYNC thread");
-        }
+                })?;
 
-        if let Some(source) = pipeline.by_name("cam") {
-            configure_source(&source);
-        }
+            let (frame_tx, frame_rx) = mpsc::sync_channel(1);
+            let stop = Arc::new(AtomicBool::new(false));
+            let stop_capture = Arc::clone(&stop);
+            let buffer_count = capture_buffers();
 
-        pipeline.set_state(gstreamer::State::Playing)?;
+            let capture_thread =
+                thread::Builder::new()
+                    .name("v4l2-capture".into())
+                    .spawn(move || {
+                        let mut stream = match MmapStream::with_buffers(
+                            &mut device,
+                            BufferType::VideoCapture,
+                            buffer_count,
+                        ) {
+                            Ok(stream) => stream,
+                            Err(error) => {
+                                tracing::error!("failed to create V4L2 mmap stream: {error}");
+                                return;
+                            }
+                        };
 
-        // Frame delivery channel
-        let (frame_tx, frame_rx) = std::sync::mpsc::sync_channel(1);
+                        tracing::info!(
+                            "capturing from {} as RG10 {}x{} @ {} fps with {} buffers",
+                            device_path,
+                            width,
+                            height,
+                            fps,
+                            buffer_count
+                        );
 
-        // AppSink callback — fires on GStreamer streaming thread
-        sink.set_callbacks(
-            gstreamer_app::AppSinkCallbacks::builder()
-                .new_sample(move |appsink| {
-                    let sample = appsink
-                        .pull_sample()
-                        .map_err(|_| gstreamer::FlowError::Eos)?;
-                    let buffer = sample.buffer().ok_or(gstreamer::FlowError::Error)?;
-                    let map = buffer
-                        .map_readable()
-                        .map_err(|_| gstreamer::FlowError::Error)?;
-                    let data: &[u8] = map.as_slice();
-
-                    // Timestamp from GPIO SYNC (one per frame, FIFO)
-                    let ts = match sync_rx.try_recv() {
-                        Ok(mono_ns) => {
-                            let mut tp = libc::timespec {
-                                tv_sec: 0,
-                                tv_nsec: 0,
+                        while !stop_capture.load(Ordering::Relaxed) {
+                            let (data, _meta) = match stream.next() {
+                                Ok(frame) => frame,
+                                Err(error) => {
+                                    tracing::error!("V4L2 capture failed: {error}");
+                                    break;
+                                }
                             };
-                            unsafe { libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut tp) };
-                            let mono_now = tp.tv_sec as i64 * 1_000_000_000 + tp.tv_nsec as i64;
-                            let age_ns = mono_now - mono_ns;
-                            let ts = Utc::now() - chrono::Duration::nanoseconds(age_ns);
-                            tracing::debug!("SYNC age: {}us", age_ns / 1000);
-                            ts
-                        }
-                        Err(_) => {
-                            tracing::error!("no SYNC timestamp, using Utc::now()");
-                            Utc::now()
-                        }
-                    };
 
-                    // Send raw BGRx data + timestamp; convert to RGB outside callback
-                    let _ = frame_tx.try_send((ts, data.to_vec()));
+                            let ts = timestamp_from_sync(&sync_rx);
+                            let _ = frame_tx.try_send((ts, data.to_vec()));
+                        }
+                    })?;
 
-                    Ok(gstreamer::FlowSuccess::Ok)
-                })
-                .build(),
+            Ok(Self {
+                frame_rx,
+                stop,
+                capture_thread: Some(capture_thread),
+                width,
+                height,
+            })
+        }
+
+        pub fn width(&self) -> u32 {
+            self.width
+        }
+
+        pub fn height(&self) -> u32 {
+            self.height
+        }
+
+        pub fn recv_frame(&mut self) -> Option<(DateTime<Utc>, Vec<u8>)> {
+            self.frame_rx.recv().ok()
+        }
+    }
+
+    impl Drop for CsiColorCamera {
+        fn drop(&mut self) {
+            self.stop.store(true, Ordering::Relaxed);
+            if let Some(handle) = self.capture_thread.take() {
+                let _ = handle.join();
+            }
+        }
+    }
+
+    fn configure_format(
+        device: &mut Device,
+        width: u32,
+        height: u32,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let format = Format::new(width, height, FourCC::new(b"RG10"));
+        let applied = device.set_format(&format)?;
+        tracing::info!(
+            "camera format={} {}x{} bytes_per_line={} size_image={}",
+            applied.fourcc.str(),
+            applied.width,
+            applied.height,
+            applied.stride,
+            applied.size
         );
+        Ok(())
+    }
 
-        Ok(Self {
-            frame_rx,
-            pipeline,
-            width,
-            height,
-        })
+    fn configure_controls(device: &Device, fps: u32) -> Result<(), Box<dyn std::error::Error>> {
+        set_i64_control(device, CONTROL_BYPASS_MODE, 1, "bypass_mode")?;
+        set_i64_control(device, CONTROL_OVERRIDE_ENABLE, 1, "override_enable")?;
+        set_bool_control(device, CONTROL_LOW_LATENCY_MODE, true, "low_latency_mode")?;
+        set_i64_control(
+            device,
+            CONTROL_FRAME_RATE,
+            i64::from(fps) * 1_000_000,
+            "frame_rate",
+        )?;
+
+        let exposure_us = std::env::var("CAM_EXPOSURE_US")
+            .ok()
+            .and_then(|value| value.parse::<i64>().ok())
+            .unwrap_or(DEFAULT_EXPOSURE_US);
+        set_i64_control(device, CONTROL_EXPOSURE, exposure_us, "exposure")?;
+
+        if let Some(gain) = std::env::var("CAM_GAIN")
+            .ok()
+            .and_then(|value| value.parse::<i64>().ok())
+        {
+            set_i64_control(device, CONTROL_GAIN, gain, "gain")?;
+        }
+
+        Ok(())
+    }
+
+    fn set_i64_control(
+        device: &Device,
+        id: u32,
+        value: i64,
+        name: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        device.set_control(control::Control {
+            id,
+            value: control::Value::Integer(value),
+        })?;
+        tracing::info!("camera {name}={value}");
+        Ok(())
+    }
+
+    fn set_bool_control(
+        device: &Device,
+        id: u32,
+        value: bool,
+        name: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        device.set_control(control::Control {
+            id,
+            value: control::Value::Boolean(value),
+        })?;
+        tracing::info!("camera {name}={value}");
+        Ok(())
+    }
+
+    fn camera_device_path(sensor_id: u32) -> String {
+        std::env::var("CAM_VIDEO_DEVICE").unwrap_or_else(|_| format!("/dev/video{sensor_id}"))
+    }
+
+    fn capture_buffers() -> u32 {
+        std::env::var("CAM_CAPTURE_BUFFERS")
+            .ok()
+            .and_then(|value| value.parse::<u32>().ok())
+            .filter(|buffers| *buffers > 1)
+            .unwrap_or(DEFAULT_CAPTURE_BUFFERS)
+    }
+
+    fn timestamp_from_sync(sync_rx: &Receiver<i64>) -> DateTime<Utc> {
+        match sync_rx.try_recv() {
+            Ok(mono_ns) => {
+                let mut tp = libc::timespec {
+                    tv_sec: 0,
+                    tv_nsec: 0,
+                };
+                unsafe { libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut tp) };
+                let mono_now = tp.tv_sec as i64 * 1_000_000_000 + tp.tv_nsec as i64;
+                let age_ns = mono_now - mono_ns;
+                tracing::debug!("SYNC age: {}us", age_ns / 1000);
+                Utc::now() - chrono::Duration::nanoseconds(age_ns)
+            }
+            Err(_) => {
+                tracing::error!("no SYNC timestamp, using Utc::now()");
+                Utc::now()
+            }
+        }
+    }
+
+    fn gpio_sync_listener(chip: &str, line: u32, ts: &mpsc::Sender<i64>) {
+        let chip_path = format!("/dev/{chip}");
+        let chip_fd = match File::open(&chip_path) {
+            Ok(f) => f,
+            Err(e) => {
+                tracing::warn!("GPIO SYNC not available ({chip_path}): {e}");
+                return;
+            }
+        };
+
+        #[repr(C)]
+        struct GpioV2LineRequest {
+            offsets: [u32; 64],
+            consumer: [u8; 32],
+            config: GpioV2LineConfig,
+            num_lines: u32,
+            event_buffer_size: u32,
+            _padding: [u32; 5],
+            fd: i32,
+        }
+
+        #[repr(C)]
+        struct GpioV2LineConfig {
+            flags: u64,
+            num_attrs: u32,
+            _padding: [u32; 5],
+            attrs: [u8; 240],
+        }
+
+        #[repr(C)]
+        struct GpioV2LineEvent {
+            timestamp_ns: u64,
+            id: u32,
+            offset: u32,
+            seqno: u32,
+            line_seqno: u32,
+            _padding: [u32; 6],
+        }
+
+        const GPIO_V2_LINE_FLAG_INPUT: u64 = 0x04;
+        const GPIO_V2_LINE_FLAG_EDGE_RISING: u64 = 0x10;
+        const GPIO_V2_GET_LINE_IOCTL: libc::c_ulong =
+            ((3u64 << 30) | (592u64 << 16) | (0xB4u64 << 8) | 0x07u64) as libc::c_ulong;
+
+        let mut req = unsafe { std::mem::zeroed::<GpioV2LineRequest>() };
+        req.offsets[0] = line;
+        req.num_lines = 1;
+        req.config.flags = GPIO_V2_LINE_FLAG_INPUT | GPIO_V2_LINE_FLAG_EDGE_RISING;
+        let label = b"optical_detector";
+        req.consumer[..label.len()].copy_from_slice(label);
+
+        let ret = unsafe { libc::ioctl(chip_fd.as_raw_fd(), GPIO_V2_GET_LINE_IOCTL, &mut req) };
+        if ret < 0 || req.fd < 0 {
+            tracing::warn!(
+                "GPIO SYNC ioctl failed on {chip_path} line {line}: {}",
+                std::io::Error::last_os_error()
+            );
+            return;
+        }
+
+        tracing::info!("GPIO SYNC listening on {chip_path} line {line}");
+
+        let mut event = unsafe { std::mem::zeroed::<GpioV2LineEvent>() };
+        let event_size = std::mem::size_of::<GpioV2LineEvent>();
+
+        loop {
+            let n = unsafe {
+                libc::read(
+                    req.fd,
+                    &mut event as *mut _ as *mut libc::c_void,
+                    event_size,
+                )
+            };
+            if n == event_size as isize {
+                let _ = ts.send(event.timestamp_ns as i64);
+            }
+        }
+    }
+}
+
+#[cfg(target_os = "linux")]
+pub use imp::CsiColorCamera;
+
+#[cfg(not(target_os = "linux"))]
+pub struct CsiColorCamera;
+
+#[cfg(not(target_os = "linux"))]
+impl CsiColorCamera {
+    pub fn new(
+        _sensor_id: u32,
+        _width: u32,
+        _height: u32,
+        _fps: u32,
+        _gpio_chip: &str,
+        _gpio_line: u32,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        Err("CsiColorCamera is only supported on Linux".into())
     }
 
     pub fn width(&self) -> u32 {
-        self.width
+        0
     }
 
     pub fn height(&self) -> u32 {
-        self.height
-    }
-
-    /// Access nvarguscamerasrc element to change runtime properties.
-    pub fn source_element(&self) -> Option<gstreamer::Element> {
-        self.pipeline.by_name("cam")
+        0
     }
 
     pub fn recv_frame(&mut self) -> Option<(DateTime<Utc>, Vec<u8>)> {
-        self.frame_rx.recv().ok()
-    }
-
-    /*pub fn autofocus_enabled(&self) -> bool {
-        self.af.is_some()
-    }
-
-    pub fn set_autofocus(&mut self, enabled: bool) {
-        if enabled && self.af.is_none() {
-            let center = self.lens.focus();
-            self.af = Some(AutoFocus::new(center, 0.005)); // ±5mm sweep
-        } else if !enabled {
-            self.af = None;
-        }
-    }*/
-}
-
-fn configure_source(source: &gstreamer::Element) {
-    let exposure_ns = std::env::var("CAM_EXPOSURE_NS")
-        .ok()
-        .and_then(|value| value.parse::<u64>().ok())
-        .unwrap_or(DEFAULT_EXPOSURE_NS);
-    let ae_lock = env_flag("CAM_AE_LOCK").unwrap_or(true);
-    let awb_lock = env_flag("CAM_AWB_LOCK");
-    let show_latency = env_flag("CAM_SHOW_LATENCY").unwrap_or(true);
-    let tnr_mode = env_i32("CAM_TNR_MODE").unwrap_or(DEFAULT_TNR_MODE);
-    let ee_mode = env_i32("CAM_EE_MODE").unwrap_or(DEFAULT_EE_MODE);
-
-    if source.find_property("exposuretimerange").is_some() {
-        let exposure_range = format!("{exposure_ns} {exposure_ns}");
-        source.set_property_from_str("exposuretimerange", &exposure_range);
-        tracing::info!("camera exposuretimerange={exposure_range}");
-    } else {
-        tracing::warn!("nvarguscamerasrc has no exposuretimerange property");
-    }
-
-    if source.find_property("aelock").is_some() {
-        source.set_property("aelock", ae_lock);
-        tracing::info!("camera aelock={ae_lock}");
-    } else {
-        tracing::warn!("nvarguscamerasrc has no aelock property");
-    }
-
-    if let Some(awb_lock) = awb_lock {
-        if source.find_property("awblock").is_some() {
-            source.set_property("awblock", awb_lock);
-            tracing::info!("camera awblock={awb_lock}");
-        } else {
-            tracing::warn!("nvarguscamerasrc has no awblock property");
-        }
-    }
-
-    if source.find_property("show-latency").is_some() {
-        source.set_property("show-latency", show_latency);
-        tracing::info!("camera show-latency={show_latency}");
-    }
-
-    if source.find_property("tnr-mode").is_some() {
-        source.set_property_from_str("tnr-mode", &tnr_mode.to_string());
-        tracing::info!("camera tnr-mode={tnr_mode}");
-    } else {
-        tracing::warn!("nvarguscamerasrc has no tnr-mode property");
-    }
-
-    if source.find_property("ee-mode").is_some() {
-        source.set_property_from_str("ee-mode", &ee_mode.to_string());
-        tracing::info!("camera ee-mode={ee_mode}");
-    } else {
-        tracing::warn!("nvarguscamerasrc has no ee-mode property");
+        None
     }
 }
-
-fn env_flag(name: &str) -> Option<bool> {
-    std::env::var(name)
-        .ok()
-        .and_then(|value| match value.as_str() {
-            "1" | "true" | "TRUE" | "yes" | "YES" | "on" | "ON" => Some(true),
-            "0" | "false" | "FALSE" | "no" | "NO" | "off" | "OFF" => Some(false),
-            _ => None,
-        })
-}
-
-fn env_i32(name: &str) -> Option<i32> {
-    std::env::var(name)
-        .ok()
-        .and_then(|value| value.parse::<i32>().ok())
-}
-
-impl Drop for CsiColorCamera {
-    fn drop(&mut self) {
-        let _ = self.pipeline.set_state(gstreamer::State::Null);
-    }
-}
-
-/// Listens for rising edges on the camera SYNC GPIO pin using the
-/// chardev interface (/dev/gpiochipN) and stores the kernel timestamp.
-fn gpio_sync_listener(chip: &str, line: u32, ts: &std::sync::mpsc::Sender<i64>) {
-    use std::fs::File;
-    use std::os::unix::io::AsRawFd;
-
-    let chip_path = format!("/dev/{chip}");
-    let chip_fd = match File::open(&chip_path) {
-        Ok(f) => f,
-        Err(e) => {
-            tracing::warn!("GPIO SYNC not available ({chip_path}): {e}");
-            return;
-        }
-    };
-
-    // GPIO v2 line request for edge detection
-    #[repr(C)]
-    struct GpioV2LineRequest {
-        offsets: [u32; 64],
-        consumer: [u8; 32],
-        config: GpioV2LineConfig,
-        num_lines: u32,
-        event_buffer_size: u32,
-        _padding: [u32; 5],
-        fd: i32,
-    }
-
-    #[repr(C)]
-    struct GpioV2LineConfig {
-        flags: u64,
-        num_attrs: u32,
-        _padding: [u32; 5],
-        attrs: [u8; 240], // 10 × GpioV2LineConfigAttribute (24 bytes each)
-    }
-
-    #[repr(C)]
-    struct GpioV2LineEvent {
-        timestamp_ns: u64,
-        id: u32,
-        offset: u32,
-        seqno: u32,
-        line_seqno: u32,
-        _padding: [u32; 6],
-    }
-
-    const GPIO_V2_LINE_FLAG_INPUT: u64 = 0x04;
-    const GPIO_V2_LINE_FLAG_EDGE_RISING: u64 = 0x10;
-
-    // _IOWR(0xB4, 0x07, struct gpio_v2_line_request) — size must be 592
-    const GPIO_V2_GET_LINE_IOCTL: libc::c_ulong =
-        ((3u64 << 30) | (592u64 << 16) | (0xB4u64 << 8) | 0x07u64) as libc::c_ulong;
-
-    let mut req = unsafe { std::mem::zeroed::<GpioV2LineRequest>() };
-    debug_assert_eq!(std::mem::size_of::<GpioV2LineRequest>(), 592);
-    req.offsets[0] = line;
-    req.num_lines = 1;
-    req.config.flags = GPIO_V2_LINE_FLAG_INPUT | GPIO_V2_LINE_FLAG_EDGE_RISING;
-    let label = b"optical_detector";
-    req.consumer[..label.len()].copy_from_slice(label);
-
-    let ret = unsafe { libc::ioctl(chip_fd.as_raw_fd(), GPIO_V2_GET_LINE_IOCTL, &mut req) };
-    if ret < 0 || req.fd < 0 {
-        tracing::warn!(
-            "GPIO SYNC ioctl failed on {chip_path} line {line}: {}",
-            std::io::Error::last_os_error()
-        );
-        return;
-    }
-
-    tracing::info!("GPIO SYNC listening on {chip_path} line {line}");
-
-    let mut event = unsafe { std::mem::zeroed::<GpioV2LineEvent>() };
-    let event_size = std::mem::size_of::<GpioV2LineEvent>();
-
-    loop {
-        let n = unsafe {
-            libc::read(
-                req.fd,
-                &mut event as *mut _ as *mut libc::c_void,
-                event_size,
-            )
-        };
-        if n == event_size as isize {
-            let _ = ts.send(event.timestamp_ns as i64);
-        }
-    }
-}
-
-/*
-fn focal_length(&self) -> f64 {
-    self.lens.focal_length()
-}
-
-fn set_focal_length(&mut self, meters: f64) {
-    self.lens.set_focal_length(meters);
-}
-
-fn fov(&self) -> angular_units::Rad<f64> {
-    self.lens.fov()
-}
-
-fn set_focus(&mut self, offset: f64, speed: Option<f64>) {
-    self.lens.set_focus(offset, speed);
-}
-
-fn focus(&self) -> f64 {
-    self.lens.focus()
-}
-*/
