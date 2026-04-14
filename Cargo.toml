@@ -1,0 +1,12 @@
+[package]
+name = "optical_detector"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chrono = { version = "0.4", default-features = true }
+gstreamer = "0.23"
+gstreamer-app = "0.23"
+libc = "0.2"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }

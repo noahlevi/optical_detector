@@ -1,0 +1,793 @@
+   0.035239000s  INFO prepare_target{force=false package_id=optical_detector v0.1.0 (/Users/ivanhumeniuk/Dev/optical_detector) target="optical_detector"}: cargo::core::compiler::fingerprint: fingerprint error for optical_detector v0.1.0 (/Users/ivanhumeniuk/Dev/optical_detector)/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("optical_detector", ["lib"], "/Users/ivanhumeniuk/Dev/optical_detector/src/lib.rs", Edition2021) }
+   0.035302916s  INFO prepare_target{force=false package_id=optical_detector v0.1.0 (/Users/ivanhumeniuk/Dev/optical_detector) target="optical_detector"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/optical_detector-d1dc270eb623639d/lib-optical_detector`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::compile
+   6: <cargo::core::compiler::build_runner::BuildRunner>::compile
+   7: cargo::ops::cargo_compile::compile_ws
+   8: cargo::ops::cargo_compile::compile_with_exec
+   9: cargo::ops::cargo_compile::compile
+  10: cargo::commands::check::exec
+  11: <cargo::cli::Exec>::exec
+  12: cargo::main
+  13: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  14: std::rt::lang_start::<()>::{closure#0}
+  15: std::rt::lang_start_internal
+  16: _main
+   0.049088791s  INFO prepare_target{force=false package_id=gstreamer v0.23.7 target="gstreamer"}: cargo::core::compiler::fingerprint: fingerprint error for gstreamer v0.23.7/Check { test: false }/TargetInner { ..: lib_target("gstreamer", ["lib"], "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gstreamer-0.23.7/src/lib.rs", Edition2021) }
+   0.049096041s  INFO prepare_target{force=false package_id=gstreamer v0.23.7 target="gstreamer"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/gstreamer-07721823065d2e07/lib-gstreamer`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::compile
+   6: cargo::core::compiler::compile
+   7: <cargo::core::compiler::build_runner::BuildRunner>::compile
+   8: cargo::ops::cargo_compile::compile_ws
+   9: cargo::ops::cargo_compile::compile_with_exec
+  10: cargo::ops::cargo_compile::compile
+  11: cargo::commands::check::exec
+  12: <cargo::cli::Exec>::exec
+  13: cargo::main
+  14: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  15: std::rt::lang_start::<()>::{closure#0}
+  16: std::rt::lang_start_internal
+  17: _main
+   0.050660708s  INFO prepare_target{force=false package_id=glib v0.20.12 target="glib"}: cargo::core::compiler::fingerprint: fingerprint error for glib v0.20.12/Check { test: false }/TargetInner { ..: lib_target("glib", ["lib"], "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/glib-0.20.12/src/lib.rs", Edition2021) }
+   0.050665625s  INFO prepare_target{force=false package_id=glib v0.20.12 target="glib"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/glib-3a9b39bac8f6357a/lib-glib`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::compile
+   6: cargo::core::compiler::compile
+   7: cargo::core::compiler::compile
+   8: <cargo::core::compiler::build_runner::BuildRunner>::compile
+   9: cargo::ops::cargo_compile::compile_ws
+  10: cargo::ops::cargo_compile::compile_with_exec
+  11: cargo::ops::cargo_compile::compile
+  12: cargo::commands::check::exec
+  13: <cargo::cli::Exec>::exec
+  14: cargo::main
+  15: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  16: std::rt::lang_start::<()>::{closure#0}
+  17: std::rt::lang_start_internal
+  18: _main
+   0.051225833s  INFO prepare_target{force=false package_id=gio-sys v0.20.10 target="gio_sys"}: cargo::core::compiler::fingerprint: fingerprint error for gio-sys v0.20.10/Check { test: false }/TargetInner { ..: lib_target("gio_sys", ["lib"], "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gio-sys-0.20.10/src/lib.rs", Edition2021) }
+   0.051229625s  INFO prepare_target{force=false package_id=gio-sys v0.20.10 target="gio_sys"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/gio-sys-6f82ed40833577c1/lib-gio_sys`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::compile
+   6: cargo::core::compiler::compile
+   7: cargo::core::compiler::compile
+   8: cargo::core::compiler::compile
+   9: <cargo::core::compiler::build_runner::BuildRunner>::compile
+  10: cargo::ops::cargo_compile::compile_ws
+  11: cargo::ops::cargo_compile::compile_with_exec
+  12: cargo::ops::cargo_compile::compile
+  13: cargo::commands::check::exec
+  14: <cargo::cli::Exec>::exec
+  15: cargo::main
+  16: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  17: std::rt::lang_start::<()>::{closure#0}
+  18: std::rt::lang_start_internal
+  19: _main
+   0.051418541s  INFO prepare_target{force=false package_id=gio-sys v0.20.10 target="build-script-build"}: cargo::core::compiler::fingerprint: fingerprint error for gio-sys v0.20.10/RunCustomBuild/TargetInner { ..: custom_build_target("build-script-build", "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gio-sys-0.20.10/build.rs", Edition2021) }
+   0.051422666s  INFO prepare_target{force=false package_id=gio-sys v0.20.10 target="build-script-build"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/gio-sys-27864712bc49e3c1/run-build-script-build-script-build`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::custom_build::build_work
+   6: cargo::core::compiler::compile
+   7: cargo::core::compiler::compile
+   8: cargo::core::compiler::compile
+   9: cargo::core::compiler::compile
+  10: cargo::core::compiler::compile
+  11: <cargo::core::compiler::build_runner::BuildRunner>::compile
+  12: cargo::ops::cargo_compile::compile_ws
+  13: cargo::ops::cargo_compile::compile_with_exec
+  14: cargo::ops::cargo_compile::compile
+  15: cargo::commands::check::exec
+  16: <cargo::cli::Exec>::exec
+  17: cargo::main
+  18: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  19: std::rt::lang_start::<()>::{closure#0}
+  20: std::rt::lang_start_internal
+  21: _main
+   0.052917916s  INFO prepare_target{force=false package_id=glib-sys v0.20.10 target="glib_sys"}: cargo::core::compiler::fingerprint: fingerprint error for glib-sys v0.20.10/Check { test: false }/TargetInner { ..: lib_target("glib_sys", ["lib"], "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/glib-sys-0.20.10/src/lib.rs", Edition2021) }
+   0.052924375s  INFO prepare_target{force=false package_id=glib-sys v0.20.10 target="glib_sys"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/glib-sys-6ec1754c169e8b61/lib-glib_sys`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::compile
+   6: cargo::core::compiler::compile
+   7: cargo::core::compiler::compile
+   8: cargo::core::compiler::compile
+   9: cargo::core::compiler::compile
+  10: <cargo::core::compiler::build_runner::BuildRunner>::compile
+  11: cargo::ops::cargo_compile::compile_ws
+  12: cargo::ops::cargo_compile::compile_with_exec
+  13: cargo::ops::cargo_compile::compile
+  14: cargo::commands::check::exec
+  15: <cargo::cli::Exec>::exec
+  16: cargo::main
+  17: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  18: std::rt::lang_start::<()>::{closure#0}
+  19: std::rt::lang_start_internal
+  20: _main
+   0.053110791s  INFO prepare_target{force=false package_id=glib-sys v0.20.10 target="build-script-build"}: cargo::core::compiler::fingerprint: fingerprint error for glib-sys v0.20.10/RunCustomBuild/TargetInner { ..: custom_build_target("build-script-build", "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/glib-sys-0.20.10/build.rs", Edition2021) }
+   0.053114666s  INFO prepare_target{force=false package_id=glib-sys v0.20.10 target="build-script-build"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/glib-sys-622681087112fde9/run-build-script-build-script-build`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::custom_build::build_work
+   6: cargo::core::compiler::compile
+   7: cargo::core::compiler::compile
+   8: cargo::core::compiler::compile
+   9: cargo::core::compiler::compile
+  10: cargo::core::compiler::compile
+  11: cargo::core::compiler::compile
+  12: <cargo::core::compiler::build_runner::BuildRunner>::compile
+  13: cargo::ops::cargo_compile::compile_ws
+  14: cargo::ops::cargo_compile::compile_with_exec
+  15: cargo::ops::cargo_compile::compile
+  16: cargo::commands::check::exec
+  17: <cargo::cli::Exec>::exec
+  18: cargo::main
+  19: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  20: std::rt::lang_start::<()>::{closure#0}
+  21: std::rt::lang_start_internal
+  22: _main
+   0.053452666s  INFO prepare_target{force=false package_id=gobject-sys v0.20.10 target="gobject_sys"}: cargo::core::compiler::fingerprint: fingerprint error for gobject-sys v0.20.10/Check { test: false }/TargetInner { ..: lib_target("gobject_sys", ["lib"], "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gobject-sys-0.20.10/src/lib.rs", Edition2021) }
+   0.053456416s  INFO prepare_target{force=false package_id=gobject-sys v0.20.10 target="gobject_sys"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/gobject-sys-2a4b5e548b53c0f7/lib-gobject_sys`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::compile
+   6: cargo::core::compiler::compile
+   7: cargo::core::compiler::compile
+   8: cargo::core::compiler::compile
+   9: cargo::core::compiler::compile
+  10: <cargo::core::compiler::build_runner::BuildRunner>::compile
+  11: cargo::ops::cargo_compile::compile_ws
+  12: cargo::ops::cargo_compile::compile_with_exec
+  13: cargo::ops::cargo_compile::compile
+  14: cargo::commands::check::exec
+  15: <cargo::cli::Exec>::exec
+  16: cargo::main
+  17: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  18: std::rt::lang_start::<()>::{closure#0}
+  19: std::rt::lang_start_internal
+  20: _main
+   0.053623583s  INFO prepare_target{force=false package_id=gobject-sys v0.20.10 target="build-script-build"}: cargo::core::compiler::fingerprint: fingerprint error for gobject-sys v0.20.10/RunCustomBuild/TargetInner { ..: custom_build_target("build-script-build", "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gobject-sys-0.20.10/build.rs", Edition2021) }
+   0.053626625s  INFO prepare_target{force=false package_id=gobject-sys v0.20.10 target="build-script-build"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/gobject-sys-a14537871209da0c/run-build-script-build-script-build`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::custom_build::build_work
+   6: cargo::core::compiler::compile
+   7: cargo::core::compiler::compile
+   8: cargo::core::compiler::compile
+   9: cargo::core::compiler::compile
+  10: cargo::core::compiler::compile
+  11: cargo::core::compiler::compile
+  12: <cargo::core::compiler::build_runner::BuildRunner>::compile
+  13: cargo::ops::cargo_compile::compile_ws
+  14: cargo::ops::cargo_compile::compile_with_exec
+  15: cargo::ops::cargo_compile::compile
+  16: cargo::commands::check::exec
+  17: <cargo::cli::Exec>::exec
+  18: cargo::main
+  19: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  20: std::rt::lang_start::<()>::{closure#0}
+  21: std::rt::lang_start_internal
+  22: _main
+   0.054011000s  INFO prepare_target{force=false package_id=gstreamer-sys v0.23.6 target="gstreamer_sys"}: cargo::core::compiler::fingerprint: fingerprint error for gstreamer-sys v0.23.6/Check { test: false }/TargetInner { ..: lib_target("gstreamer_sys", ["lib"], "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gstreamer-sys-0.23.6/src/lib.rs", Edition2021) }
+   0.054014291s  INFO prepare_target{force=false package_id=gstreamer-sys v0.23.6 target="gstreamer_sys"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/gstreamer-sys-845beb29c20fc6e8/lib-gstreamer_sys`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::compile
+   6: cargo::core::compiler::compile
+   7: cargo::core::compiler::compile
+   8: <cargo::core::compiler::build_runner::BuildRunner>::compile
+   9: cargo::ops::cargo_compile::compile_ws
+  10: cargo::ops::cargo_compile::compile_with_exec
+  11: cargo::ops::cargo_compile::compile
+  12: cargo::commands::check::exec
+  13: <cargo::cli::Exec>::exec
+  14: cargo::main
+  15: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  16: std::rt::lang_start::<()>::{closure#0}
+  17: std::rt::lang_start_internal
+  18: _main
+   0.054186083s  INFO prepare_target{force=false package_id=gstreamer-sys v0.23.6 target="build-script-build"}: cargo::core::compiler::fingerprint: fingerprint error for gstreamer-sys v0.23.6/RunCustomBuild/TargetInner { ..: custom_build_target("build-script-build", "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gstreamer-sys-0.23.6/build.rs", Edition2021) }
+   0.054189083s  INFO prepare_target{force=false package_id=gstreamer-sys v0.23.6 target="build-script-build"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/gstreamer-sys-b868409943e0ec5a/run-build-script-build-script-build`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::custom_build::build_work
+   6: cargo::core::compiler::compile
+   7: cargo::core::compiler::compile
+   8: cargo::core::compiler::compile
+   9: cargo::core::compiler::compile
+  10: <cargo::core::compiler::build_runner::BuildRunner>::compile
+  11: cargo::ops::cargo_compile::compile_ws
+  12: cargo::ops::cargo_compile::compile_with_exec
+  13: cargo::ops::cargo_compile::compile
+  14: cargo::commands::check::exec
+  15: <cargo::cli::Exec>::exec
+  16: cargo::main
+  17: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  18: std::rt::lang_start::<()>::{closure#0}
+  19: std::rt::lang_start_internal
+  20: _main
+   0.055436291s  INFO prepare_target{force=false package_id=gstreamer-app v0.23.5 target="gstreamer_app"}: cargo::core::compiler::fingerprint: fingerprint error for gstreamer-app v0.23.5/Check { test: false }/TargetInner { ..: lib_target("gstreamer_app", ["lib"], "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gstreamer-app-0.23.5/src/lib.rs", Edition2021) }
+   0.055440041s  INFO prepare_target{force=false package_id=gstreamer-app v0.23.5 target="gstreamer_app"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/gstreamer-app-9891f4cae7d406dc/lib-gstreamer_app`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::compile
+   6: cargo::core::compiler::compile
+   7: <cargo::core::compiler::build_runner::BuildRunner>::compile
+   8: cargo::ops::cargo_compile::compile_ws
+   9: cargo::ops::cargo_compile::compile_with_exec
+  10: cargo::ops::cargo_compile::compile
+  11: cargo::commands::check::exec
+  12: <cargo::cli::Exec>::exec
+  13: cargo::main
+  14: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  15: std::rt::lang_start::<()>::{closure#0}
+  16: std::rt::lang_start_internal
+  17: _main
+   0.055699666s  INFO prepare_target{force=false package_id=gstreamer-app-sys v0.23.5 target="gstreamer_app_sys"}: cargo::core::compiler::fingerprint: fingerprint error for gstreamer-app-sys v0.23.5/Check { test: false }/TargetInner { ..: lib_target("gstreamer_app_sys", ["lib"], "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gstreamer-app-sys-0.23.5/src/lib.rs", Edition2021) }
+   0.055702750s  INFO prepare_target{force=false package_id=gstreamer-app-sys v0.23.5 target="gstreamer_app_sys"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/gstreamer-app-sys-021314f2a3f8a707/lib-gstreamer_app_sys`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::compile
+   6: cargo::core::compiler::compile
+   7: cargo::core::compiler::compile
+   8: <cargo::core::compiler::build_runner::BuildRunner>::compile
+   9: cargo::ops::cargo_compile::compile_ws
+  10: cargo::ops::cargo_compile::compile_with_exec
+  11: cargo::ops::cargo_compile::compile
+  12: cargo::commands::check::exec
+  13: <cargo::cli::Exec>::exec
+  14: cargo::main
+  15: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  16: std::rt::lang_start::<()>::{closure#0}
+  17: std::rt::lang_start_internal
+  18: _main
+   0.055889750s  INFO prepare_target{force=false package_id=gstreamer-app-sys v0.23.5 target="build-script-build"}: cargo::core::compiler::fingerprint: fingerprint error for gstreamer-app-sys v0.23.5/RunCustomBuild/TargetInner { ..: custom_build_target("build-script-build", "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gstreamer-app-sys-0.23.5/build.rs", Edition2021) }
+   0.055892750s  INFO prepare_target{force=false package_id=gstreamer-app-sys v0.23.5 target="build-script-build"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/gstreamer-app-sys-4b6e3f23906a682c/run-build-script-build-script-build`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::custom_build::build_work
+   6: cargo::core::compiler::compile
+   7: cargo::core::compiler::compile
+   8: cargo::core::compiler::compile
+   9: cargo::core::compiler::compile
+  10: <cargo::core::compiler::build_runner::BuildRunner>::compile
+  11: cargo::ops::cargo_compile::compile_ws
+  12: cargo::ops::cargo_compile::compile_with_exec
+  13: cargo::ops::cargo_compile::compile
+  14: cargo::commands::check::exec
+  15: <cargo::cli::Exec>::exec
+  16: cargo::main
+  17: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  18: std::rt::lang_start::<()>::{closure#0}
+  19: std::rt::lang_start_internal
+  20: _main
+   0.055972833s  INFO prepare_target{force=false package_id=gstreamer-base-sys v0.23.6 target="gstreamer_base_sys"}: cargo::core::compiler::fingerprint: fingerprint error for gstreamer-base-sys v0.23.6/Check { test: false }/TargetInner { ..: lib_target("gstreamer_base_sys", ["lib"], "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gstreamer-base-sys-0.23.6/src/lib.rs", Edition2021) }
+   0.055976000s  INFO prepare_target{force=false package_id=gstreamer-base-sys v0.23.6 target="gstreamer_base_sys"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/gstreamer-base-sys-ef4ace7daa1ae2b5/lib-gstreamer_base_sys`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::compile
+   6: cargo::core::compiler::compile
+   7: cargo::core::compiler::compile
+   8: cargo::core::compiler::compile
+   9: <cargo::core::compiler::build_runner::BuildRunner>::compile
+  10: cargo::ops::cargo_compile::compile_ws
+  11: cargo::ops::cargo_compile::compile_with_exec
+  12: cargo::ops::cargo_compile::compile
+  13: cargo::commands::check::exec
+  14: <cargo::cli::Exec>::exec
+  15: cargo::main
+  16: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  17: std::rt::lang_start::<()>::{closure#0}
+  18: std::rt::lang_start_internal
+  19: _main
+   0.056159125s  INFO prepare_target{force=false package_id=gstreamer-base-sys v0.23.6 target="build-script-build"}: cargo::core::compiler::fingerprint: fingerprint error for gstreamer-base-sys v0.23.6/RunCustomBuild/TargetInner { ..: custom_build_target("build-script-build", "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gstreamer-base-sys-0.23.6/build.rs", Edition2021) }
+   0.056162458s  INFO prepare_target{force=false package_id=gstreamer-base-sys v0.23.6 target="build-script-build"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/gstreamer-base-sys-3024593050ca427c/run-build-script-build-script-build`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::custom_build::build_work
+   6: cargo::core::compiler::compile
+   7: cargo::core::compiler::compile
+   8: cargo::core::compiler::compile
+   9: cargo::core::compiler::compile
+  10: cargo::core::compiler::compile
+  11: <cargo::core::compiler::build_runner::BuildRunner>::compile
+  12: cargo::ops::cargo_compile::compile_ws
+  13: cargo::ops::cargo_compile::compile_with_exec
+  14: cargo::ops::cargo_compile::compile
+  15: cargo::commands::check::exec
+  16: <cargo::cli::Exec>::exec
+  17: cargo::main
+  18: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  19: std::rt::lang_start::<()>::{closure#0}
+  20: std::rt::lang_start_internal
+  21: _main
+   0.056239125s  INFO prepare_target{force=false package_id=gstreamer-base v0.23.6 target="gstreamer_base"}: cargo::core::compiler::fingerprint: fingerprint error for gstreamer-base v0.23.6/Check { test: false }/TargetInner { ..: lib_target("gstreamer_base", ["lib"], "/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gstreamer-base-0.23.6/src/lib.rs", Edition2021) }
+   0.056242125s  INFO prepare_target{force=false package_id=gstreamer-base v0.23.6 target="gstreamer_base"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/gstreamer-base-dd723abadab34502/lib-gstreamer_base`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::compile
+   6: cargo::core::compiler::compile
+   7: cargo::core::compiler::compile
+   8: <cargo::core::compiler::build_runner::BuildRunner>::compile
+   9: cargo::ops::cargo_compile::compile_ws
+  10: cargo::ops::cargo_compile::compile_with_exec
+  11: cargo::ops::cargo_compile::compile
+  12: cargo::commands::check::exec
+  13: <cargo::cli::Exec>::exec
+  14: cargo::main
+  15: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  16: std::rt::lang_start::<()>::{closure#0}
+  17: std::rt::lang_start_internal
+  18: _main
+   0.057815875s  INFO prepare_target{force=false package_id=optical_detector v0.1.0 (/Users/ivanhumeniuk/Dev/optical_detector) target="optical_detector"}: cargo::core::compiler::fingerprint: fingerprint error for optical_detector v0.1.0 (/Users/ivanhumeniuk/Dev/optical_detector)/Check { test: true }/TargetInner { name_inferred: true, ..: lib_target("optical_detector", ["lib"], "/Users/ivanhumeniuk/Dev/optical_detector/src/lib.rs", Edition2021) }
+   0.057819750s  INFO prepare_target{force=false package_id=optical_detector v0.1.0 (/Users/ivanhumeniuk/Dev/optical_detector) target="optical_detector"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/optical_detector-64786225db56d046/test-lib-optical_detector`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::compile
+   6: <cargo::core::compiler::build_runner::BuildRunner>::compile
+   7: cargo::ops::cargo_compile::compile_ws
+   8: cargo::ops::cargo_compile::compile_with_exec
+   9: cargo::ops::cargo_compile::compile
+  10: cargo::commands::check::exec
+  11: <cargo::cli::Exec>::exec
+  12: cargo::main
+  13: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  14: std::rt::lang_start::<()>::{closure#0}
+  15: std::rt::lang_start_internal
+  16: _main
+   0.058042166s  INFO prepare_target{force=false package_id=optical_detector v0.1.0 (/Users/ivanhumeniuk/Dev/optical_detector) target="optical_detector"}: cargo::core::compiler::fingerprint: fingerprint error for optical_detector v0.1.0 (/Users/ivanhumeniuk/Dev/optical_detector)/Check { test: false }/TargetInner { name: "optical_detector", doc: true, ..: with_path("/Users/ivanhumeniuk/Dev/optical_detector/src/main.rs", Edition2021) }
+   0.058046041s  INFO prepare_target{force=false package_id=optical_detector v0.1.0 (/Users/ivanhumeniuk/Dev/optical_detector) target="optical_detector"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/optical_detector-bee24e759f0af4bb/bin-optical_detector`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::compile
+   6: <cargo::core::compiler::build_runner::BuildRunner>::compile
+   7: cargo::ops::cargo_compile::compile_ws
+   8: cargo::ops::cargo_compile::compile_with_exec
+   9: cargo::ops::cargo_compile::compile
+  10: cargo::commands::check::exec
+  11: <cargo::cli::Exec>::exec
+  12: cargo::main
+  13: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  14: std::rt::lang_start::<()>::{closure#0}
+  15: std::rt::lang_start_internal
+  16: _main
+   0.058269458s  INFO prepare_target{force=false package_id=optical_detector v0.1.0 (/Users/ivanhumeniuk/Dev/optical_detector) target="optical_detector"}: cargo::core::compiler::fingerprint: fingerprint error for optical_detector v0.1.0 (/Users/ivanhumeniuk/Dev/optical_detector)/Check { test: true }/TargetInner { name: "optical_detector", doc: true, ..: with_path("/Users/ivanhumeniuk/Dev/optical_detector/src/main.rs", Edition2021) }
+   0.058273000s  INFO prepare_target{force=false package_id=optical_detector v0.1.0 (/Users/ivanhumeniuk/Dev/optical_detector) target="optical_detector"}: cargo::core::compiler::fingerprint:     err: failed to read `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/.fingerprint/optical_detector-8de4b10edd0f16c3/test-bin-optical_detector`
+
+Caused by:
+    No such file or directory (os error 2)
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: cargo_util::paths::read_bytes
+   2: cargo_util::paths::read
+   3: cargo::core::compiler::fingerprint::_compare_old_fingerprint
+   4: cargo::core::compiler::fingerprint::prepare_target
+   5: cargo::core::compiler::compile
+   6: <cargo::core::compiler::build_runner::BuildRunner>::compile
+   7: cargo::ops::cargo_compile::compile_ws
+   8: cargo::ops::cargo_compile::compile_with_exec
+   9: cargo::ops::cargo_compile::compile
+  10: cargo::commands::check::exec
+  11: <cargo::cli::Exec>::exec
+  12: cargo::main
+  13: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  14: std::rt::lang_start::<()>::{closure#0}
+  15: std::rt::lang_start_internal
+  16: _main
+   Compiling glib-sys v0.20.10
+   Compiling gobject-sys v0.20.10
+   Compiling gstreamer-sys v0.23.6
+   Compiling gio-sys v0.20.10
+   Compiling gstreamer-base-sys v0.23.6
+   Compiling gstreamer-app-sys v0.23.5
+warning: gobject-sys@0.20.10: 
+error: failed to run custom build command for `gobject-sys v0.20.10`
+note: To improve backtraces for build dependencies, set the CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG=true environment variable to enable debug information generation.
+
+Caused by:
+  process didn't exit successfully: `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/build/gobject-sys-68f077ce9977b2c4/build-script-build` (exit status: 1)
+  --- stdout
+  cargo:rerun-if-changed=/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gobject-sys-0.20.10/Cargo.toml
+  cargo:rerun-if-env-changed=GOBJECT_2.0_NO_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_SYSROOT_DIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR
+  cargo:warning=
+  pkg-config exited with status code 1
+  > PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1 pkg-config --libs --cflags gobject-2.0 'gobject-2.0 >= 2.56'
+
+  pkg-config output:
+    Package gobject-2.0 was not found in the pkg-config search path.
+    Perhaps you should add the directory containing `gobject-2.0.pc'
+    to the PKG_CONFIG_PATH environment variable
+    Package 'gobject-2.0' not found
+    Package 'gobject-2.0' not found
+
+  The system library `gobject-2.0` required by crate `gobject-sys` was not found.
+  The file `gobject-2.0.pc` needs to be installed and the PKG_CONFIG_PATH environment variable must contain its parent directory.
+  The PKG_CONFIG_PATH environment variable is not set.
+
+  HINT: if you have installed the library, try setting PKG_CONFIG_PATH to the directory containing `gobject-2.0.pc`.
+
+warning: build failed, waiting for other jobs to finish...
+warning: gstreamer-sys@0.23.6: 
+error: failed to run custom build command for `gstreamer-sys v0.23.6`
+note: To improve backtraces for build dependencies, set the CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG=true environment variable to enable debug information generation.
+
+Caused by:
+  process didn't exit successfully: `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/build/gstreamer-sys-99115a0c7c6e2c9d/build-script-build` (exit status: 1)
+  --- stdout
+  cargo:rerun-if-changed=/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gstreamer-sys-0.23.6/Cargo.toml
+  cargo:rerun-if-env-changed=GSTREAMER_1.0_NO_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_SYSROOT_DIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR
+  cargo:warning=
+  pkg-config exited with status code 1
+  > PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1 pkg-config --libs --cflags gstreamer-1.0 'gstreamer-1.0 >= 1.14'
+
+  pkg-config output:
+    Package gstreamer-1.0 was not found in the pkg-config search path.
+    Perhaps you should add the directory containing `gstreamer-1.0.pc'
+    to the PKG_CONFIG_PATH environment variable
+    Package 'gstreamer-1.0' not found
+    Package 'gstreamer-1.0' not found
+
+  The system library `gstreamer-1.0` required by crate `gstreamer-sys` was not found.
+  The file `gstreamer-1.0.pc` needs to be installed and the PKG_CONFIG_PATH environment variable must contain its parent directory.
+  The PKG_CONFIG_PATH environment variable is not set.
+
+  HINT: if you have installed the library, try setting PKG_CONFIG_PATH to the directory containing `gstreamer-1.0.pc`.
+
+warning: gstreamer-base-sys@0.23.6: 
+error: failed to run custom build command for `gstreamer-base-sys v0.23.6`
+note: To improve backtraces for build dependencies, set the CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG=true environment variable to enable debug information generation.
+
+Caused by:
+  process didn't exit successfully: `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/build/gstreamer-base-sys-caa46b38a656e68b/build-script-build` (exit status: 1)
+  --- stdout
+  cargo:rerun-if-changed=/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gstreamer-base-sys-0.23.6/Cargo.toml
+  cargo:rerun-if-env-changed=GSTREAMER_BASE_1.0_NO_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_SYSROOT_DIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR
+  cargo:warning=
+  pkg-config exited with status code 1
+  > PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1 pkg-config --libs --cflags gstreamer-base-1.0 'gstreamer-base-1.0 >= 1.14'
+
+  pkg-config output:
+    Package gstreamer-base-1.0 was not found in the pkg-config search path.
+    Perhaps you should add the directory containing `gstreamer-base-1.0.pc'
+    to the PKG_CONFIG_PATH environment variable
+    Package 'gstreamer-base-1.0' not found
+    Package 'gstreamer-base-1.0' not found
+
+  The system library `gstreamer-base-1.0` required by crate `gstreamer-base-sys` was not found.
+  The file `gstreamer-base-1.0.pc` needs to be installed and the PKG_CONFIG_PATH environment variable must contain its parent directory.
+  The PKG_CONFIG_PATH environment variable is not set.
+
+  HINT: if you have installed the library, try setting PKG_CONFIG_PATH to the directory containing `gstreamer-base-1.0.pc`.
+
+warning: gio-sys@0.20.10: 
+error: failed to run custom build command for `gio-sys v0.20.10`
+note: To improve backtraces for build dependencies, set the CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG=true environment variable to enable debug information generation.
+
+Caused by:
+  process didn't exit successfully: `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/build/gio-sys-9d9b016e0326136b/build-script-build` (exit status: 1)
+  --- stdout
+  cargo:rerun-if-changed=/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gio-sys-0.20.10/Cargo.toml
+  cargo:rerun-if-env-changed=GIO_2.0_NO_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_SYSROOT_DIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR
+  cargo:warning=
+  pkg-config exited with status code 1
+  > PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1 pkg-config --libs --cflags gio-2.0 'gio-2.0 >= 2.56'
+
+  pkg-config output:
+    Package gio-2.0 was not found in the pkg-config search path.
+    Perhaps you should add the directory containing `gio-2.0.pc'
+    to the PKG_CONFIG_PATH environment variable
+    Package 'gio-2.0' not found
+    Package 'gio-2.0' not found
+
+  The system library `gio-2.0` required by crate `gio-sys` was not found.
+  The file `gio-2.0.pc` needs to be installed and the PKG_CONFIG_PATH environment variable must contain its parent directory.
+  The PKG_CONFIG_PATH environment variable is not set.
+
+  HINT: if you have installed the library, try setting PKG_CONFIG_PATH to the directory containing `gio-2.0.pc`.
+
+warning: gstreamer-app-sys@0.23.5: 
+error: failed to run custom build command for `gstreamer-app-sys v0.23.5`
+note: To improve backtraces for build dependencies, set the CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG=true environment variable to enable debug information generation.
+
+Caused by:
+  process didn't exit successfully: `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/build/gstreamer-app-sys-2f4463506adf336a/build-script-build` (exit status: 1)
+  --- stdout
+  cargo:rerun-if-changed=/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gstreamer-app-sys-0.23.5/Cargo.toml
+  cargo:rerun-if-env-changed=GSTREAMER_APP_1.0_NO_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_SYSROOT_DIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR
+  cargo:warning=
+  pkg-config exited with status code 1
+  > PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1 pkg-config --libs --cflags gstreamer-app-1.0 'gstreamer-app-1.0 >= 1.14'
+
+  pkg-config output:
+    Package gstreamer-app-1.0 was not found in the pkg-config search path.
+    Perhaps you should add the directory containing `gstreamer-app-1.0.pc'
+    to the PKG_CONFIG_PATH environment variable
+    Package 'gstreamer-app-1.0' not found
+    Package 'gstreamer-app-1.0' not found
+
+  The system library `gstreamer-app-1.0` required by crate `gstreamer-app-sys` was not found.
+  The file `gstreamer-app-1.0.pc` needs to be installed and the PKG_CONFIG_PATH environment variable must contain its parent directory.
+  The PKG_CONFIG_PATH environment variable is not set.
+
+  HINT: if you have installed the library, try setting PKG_CONFIG_PATH to the directory containing `gstreamer-app-1.0.pc`.
+
+warning: glib-sys@0.20.10: 
+error: failed to run custom build command for `glib-sys v0.20.10`
+note: To improve backtraces for build dependencies, set the CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG=true environment variable to enable debug information generation.
+
+Caused by:
+  process didn't exit successfully: `/Users/ivanhumeniuk/Dev/optical_detector/target/debug/build/glib-sys-209550d5ca7bb4d8/build-script-build` (exit status: 1)
+  --- stdout
+  cargo:rerun-if-changed=/Users/ivanhumeniuk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/glib-sys-0.20.10/Cargo.toml
+  cargo:rerun-if-env-changed=GLIB_2.0_NO_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_PATH
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_SYSROOT_DIR
+  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR
+  cargo:warning=
+  pkg-config exited with status code 1
+  > PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1 pkg-config --libs --cflags glib-2.0 'glib-2.0 >= 2.56'
+
+  pkg-config output:
+    Package glib-2.0 was not found in the pkg-config search path.
+    Perhaps you should add the directory containing `glib-2.0.pc'
+    to the PKG_CONFIG_PATH environment variable
+    Package 'glib-2.0' not found
+    Package 'glib-2.0' not found
+
+  The system library `glib-2.0` required by crate `glib-sys` was not found.
+  The file `glib-2.0.pc` needs to be installed and the PKG_CONFIG_PATH environment variable must contain its parent directory.
+  The PKG_CONFIG_PATH environment variable is not set.
+
+  HINT: if you have installed the library, try setting PKG_CONFIG_PATH to the directory containing `glib-2.0.pc`.
+

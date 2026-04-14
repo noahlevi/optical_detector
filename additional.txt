@@ -1,0 +1,2 @@
+IMX462 
+Jetson Orin NX
