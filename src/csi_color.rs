@@ -3,6 +3,8 @@ use gstreamer::prelude::*;
 use gstreamer_app::AppSink;
 
 const DEFAULT_EXPOSURE_NS: u64 = 1_000_000;
+const DEFAULT_TNR_MODE: i32 = 0;
+const DEFAULT_EE_MODE: i32 = 0;
 
 pub struct CsiColorCamera {
     frame_rx: std::sync::mpsc::Receiver<(DateTime<Utc>, Vec<u8>)>,
@@ -155,6 +157,9 @@ fn configure_source(source: &gstreamer::Element) {
         .unwrap_or(DEFAULT_EXPOSURE_NS);
     let ae_lock = env_flag("CAM_AE_LOCK").unwrap_or(true);
     let awb_lock = env_flag("CAM_AWB_LOCK");
+    let show_latency = env_flag("CAM_SHOW_LATENCY").unwrap_or(true);
+    let tnr_mode = env_i32("CAM_TNR_MODE").unwrap_or(DEFAULT_TNR_MODE);
+    let ee_mode = env_i32("CAM_EE_MODE").unwrap_or(DEFAULT_EE_MODE);
 
     if source.find_property("exposuretimerange").is_some() {
         let exposure_range = format!("{exposure_ns} {exposure_ns}");
@@ -179,6 +184,25 @@ fn configure_source(source: &gstreamer::Element) {
             tracing::warn!("nvarguscamerasrc has no awblock property");
         }
     }
+
+    if source.find_property("show-latency").is_some() {
+        source.set_property("show-latency", show_latency);
+        tracing::info!("camera show-latency={show_latency}");
+    }
+
+    if source.find_property("tnr-mode").is_some() {
+        source.set_property_from_str("tnr-mode", &tnr_mode.to_string());
+        tracing::info!("camera tnr-mode={tnr_mode}");
+    } else {
+        tracing::warn!("nvarguscamerasrc has no tnr-mode property");
+    }
+
+    if source.find_property("ee-mode").is_some() {
+        source.set_property_from_str("ee-mode", &ee_mode.to_string());
+        tracing::info!("camera ee-mode={ee_mode}");
+    } else {
+        tracing::warn!("nvarguscamerasrc has no ee-mode property");
+    }
 }
 
 fn env_flag(name: &str) -> Option<bool> {
@@ -189,6 +213,12 @@ fn env_flag(name: &str) -> Option<bool> {
             "0" | "false" | "FALSE" | "no" | "NO" | "off" | "OFF" => Some(false),
             _ => None,
         })
+}
+
+fn env_i32(name: &str) -> Option<i32> {
+    std::env::var(name)
+        .ok()
+        .and_then(|value| value.parse::<i32>().ok())
 }
 
 impl Drop for CsiColorCamera {
