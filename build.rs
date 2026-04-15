@@ -21,13 +21,14 @@ fn main() {
         .file("src/argus_wrapper.cpp")
         .compile("argus_wrapper");
 
-    // libargus.so  (Argus runtime)
-    println!("cargo:rustc-link-lib=argus");
+    // libnvargus.so (Argus runtime, NVIDIA-specific path on L4T)
+    println!("cargo:rustc-link-lib=nvargus");
 
     // NvBufSurface (buffer mapping helper)
     println!("cargo:rustc-link-lib=nvbufsurface");
 
-    // Tegra libs live here on aarch64 L4T
+    // NVIDIA libs on aarch64 L4T
+    println!("cargo:rustc-link-search=/usr/lib/aarch64-linux-gnu/nvidia");
     println!("cargo:rustc-link-search=/usr/lib/aarch64-linux-gnu/tegra");
 
     println!("cargo:rerun-if-changed=src/argus_wrapper.cpp");
