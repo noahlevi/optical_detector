@@ -34,7 +34,8 @@ mod imp {
             gstreamer::init()?;
 
             let pipeline_str = format!(
-                "nvarguscamerasrc name=cam sensor-id={sensor_id} ! \
+                "nvarguscamerasrc name=cam sensor-id={sensor_id} \
+                 wbmode=0 tnr-mode=0 eemode=0 ! \
                  video/x-raw(memory:NVMM),width={width},height={height},framerate={fps}/1,format=NV12 ! \
                  nvvidconv ! \
                  video/x-raw,format=NV12 ! \
