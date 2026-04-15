@@ -16,7 +16,8 @@ fn main() {
         .flag("-std=c++11")
         .flag("-Wno-deprecated-declarations")
         .include(&argus_include)
-        .include("/usr/include")         // nvbufsurface.h
+        .include("/usr/include")
+        .include("/usr/src/jetson_multimedia_api/include") // nvbufsurface.h
         .file("src/argus_wrapper.cpp")
         .compile("argus_wrapper");
 
