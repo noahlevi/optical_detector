@@ -33,11 +33,12 @@ mod imp {
         ) -> Result<Self, Box<dyn std::error::Error>> {
             gstreamer::init()?;
 
-            let device_path = camera_device_path(sensor_id);
             let pipeline_str = format!(
-                "v4l2src name=cam device={device_path} io-mode=dmabuf ! \
-                 video/x-bayer,format=rggb,width={width},height={height},framerate={fps}/1 ! \
-                 appsink name=sink sync=false",
+                "nvarguscamerasrc name=cam sensor-id={sensor_id} ! \
+                 video/x-raw(memory:NVMM),width={width},height={height},framerate={fps}/1,format=NV12 ! \
+                 nvvidconv ! \
+                 video/x-raw,format=NV12 ! \
+                 appsink name=sink sync=false max-buffers=1 drop=true",
             );
             tracing::info!("camera pipeline: {pipeline_str}");
 
@@ -170,10 +171,6 @@ mod imp {
         fn recv_frame(&mut self) -> Option<(DateTime<Utc>, Vec<u8>)> {
             self.frame_rx.recv().ok()
         }
-    }
-
-    fn camera_device_path(sensor_id: u32) -> String {
-        std::env::var("CAM_VIDEO_DEVICE").unwrap_or_else(|_| format!("/dev/video{sensor_id}"))
     }
 
     fn timestamp_from_sync(sync_rx: &std::sync::mpsc::Receiver<i64>) -> DateTime<Utc> {
