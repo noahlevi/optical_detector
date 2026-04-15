@@ -158,28 +158,12 @@ mod imp {
     }
 
     fn configure_controls(device: &Device, fps: u32) -> Result<(), Box<dyn std::error::Error>> {
-        set_i64_control(device, CONTROL_BYPASS_MODE, 1, "bypass_mode")?;
-        set_i64_control(device, CONTROL_OVERRIDE_ENABLE, 1, "override_enable")?;
-        set_bool_control(device, CONTROL_LOW_LATENCY_MODE, true, "low_latency_mode")?;
         set_i64_control(
             device,
             CONTROL_FRAME_RATE,
             i64::from(fps) * 1_000_000,
             "frame_rate",
         )?;
-
-        let exposure_us = std::env::var("CAM_EXPOSURE_US")
-            .ok()
-            .and_then(|value| value.parse::<i64>().ok())
-            .unwrap_or(DEFAULT_EXPOSURE_US);
-        set_i64_control(device, CONTROL_EXPOSURE, exposure_us, "exposure")?;
-
-        if let Some(gain) = std::env::var("CAM_GAIN")
-            .ok()
-            .and_then(|value| value.parse::<i64>().ok())
-        {
-            set_i64_control(device, CONTROL_GAIN, gain, "gain")?;
-        }
 
         Ok(())
     }
