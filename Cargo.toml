@@ -10,4 +10,5 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-v4l = "0.14"
+gstreamer = "0.23"
+gstreamer-app = "0.23"
