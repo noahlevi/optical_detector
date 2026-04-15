@@ -34,14 +34,14 @@ mod imp {
             gstreamer::init()?;
 
             let pipeline_str = format!(
-                "nvarguscamerasrc name=cam sensor-id={sensor_id} \
-                 wbmode=0 tnr-mode=0 ! \
+                "nvarguscamerasrc name=cam sensor-id={sensor_id} wbmode=0 tnr-mode=0 ee-mode=0 ! \
                  video/x-raw(memory:NVMM),width={width},height={height},framerate={fps}/1,format=NV12 ! \
                  nvvidconv ! \
                  video/x-raw,format=NV12 ! \
                  appsink name=sink sync=false max-buffers=1 drop=true",
             );
             tracing::info!("camera pipeline: {pipeline_str}");
+            
 
             let pipeline = gstreamer::parse::launch(&pipeline_str)?
                 .downcast::<gstreamer::Pipeline>()
