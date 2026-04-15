@@ -5,29 +5,48 @@ mod imp {
     use super::*;
     use std::fs::File;
     use std::os::fd::AsRawFd;
-    use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::mpsc::{self, Receiver};
-    use std::sync::Arc;
-    use std::thread::{self, JoinHandle};
-    use v4l::buffer::Type as BufferType;
-    use v4l::io::traits::CaptureStream;
-    use v4l::prelude::MmapStream;
-    use v4l::video::Capture;
-    use v4l::{control, Device, Format, FourCC};
+    use std::thread;
 
-    const DEFAULT_CAPTURE_BUFFERS: u32 = 4;
-    const DEFAULT_EXPOSURE_US: i64 = 1_000;
-    const CONTROL_GAIN: u32 = 0x009a2009;
-    const CONTROL_EXPOSURE: u32 = 0x009a200a;
-    const CONTROL_FRAME_RATE: u32 = 0x009a200b;
-    const CONTROL_BYPASS_MODE: u32 = 0x009a2064;
-    const CONTROL_OVERRIDE_ENABLE: u32 = 0x009a2065;
-    const CONTROL_LOW_LATENCY_MODE: u32 = 0x009a206d;
+    // -----------------------------------------------------------------------
+    // FFI: thin C wrapper around libargus
+    // -----------------------------------------------------------------------
+
+    #[repr(C)]
+    struct ArgusContext {
+        _opaque: [u8; 0],
+    }
+
+    #[link(name = "argus_wrapper", kind = "static")]
+    extern "C" {
+        fn argus_create(
+            sensor_id: u32,
+            width: u32,
+            height: u32,
+            fps: u32,
+        ) -> *mut ArgusContext;
+
+        fn argus_acquire_frame(
+            ctx: *mut ArgusContext,
+            buffer: *mut u8,
+            buffer_size: u32,
+            timestamp_ns: *mut i64,
+        ) -> i32;
+
+        fn argus_destroy(ctx: *mut ArgusContext);
+    }
+
+    // SAFETY: Argus context is accessed from a single capture thread only.
+    unsafe impl Send for ArgusContext {}
+
+    // -----------------------------------------------------------------------
+    // Public camera type
+    // -----------------------------------------------------------------------
 
     pub struct CsiColorCamera {
         frame_rx: Receiver<(DateTime<Utc>, Vec<u8>)>,
-        stop: Arc<AtomicBool>,
-        capture_thread: Option<JoinHandle<()>>,
+        stop_tx: mpsc::SyncSender<()>,
+        capture_thread: Option<thread::JoinHandle<()>>,
         width: u32,
         height: u32,
     }
@@ -41,12 +60,7 @@ mod imp {
             gpio_chip: &str,
             gpio_line: u32,
         ) -> Result<Self, Box<dyn std::error::Error>> {
-            let device_path = camera_device_path(sensor_id);
-            let mut device = Device::with_path(&device_path)?;
-
-            configure_format(&mut device, width, height)?;
-            configure_controls(&device, fps)?;
-
+            // GPIO SYNC listener
             let (sync_tx, sync_rx) = mpsc::channel::<i64>();
             let chip = gpio_chip.to_string();
             thread::Builder::new()
@@ -56,53 +70,76 @@ mod imp {
                     tracing::warn!("GPIO SYNC listener exited");
                 })?;
 
-            let (frame_tx, frame_rx) = mpsc::sync_channel(1);
-            let stop = Arc::new(AtomicBool::new(false));
-            let stop_capture = Arc::clone(&stop);
-            let buffer_count = capture_buffers();
+            // Channel: capture thread → recv_frame()
+            let (frame_tx, frame_rx) = mpsc::sync_channel::<(DateTime<Utc>, Vec<u8>)>(1);
 
-            let capture_thread =
-                thread::Builder::new()
-                    .name("v4l2-capture".into())
-                    .spawn(move || {
-                        let mut stream = match MmapStream::with_buffers(
-                            &mut device,
-                            BufferType::VideoCapture,
-                            buffer_count,
-                        ) {
-                            Ok(stream) => stream,
-                            Err(error) => {
-                                tracing::error!("failed to create V4L2 mmap stream: {error}");
-                                return;
-                            }
+            // Channel: stop signal
+            let (stop_tx, stop_rx) = mpsc::sync_channel::<()>(1);
+
+            let frame_size = (width * height * 3 / 2) as usize; // NV12
+
+            let capture_thread = thread::Builder::new()
+                .name("argus-capture".into())
+                .spawn(move || {
+                    // Create Argus context on the capture thread (required by Argus).
+                    let ctx = unsafe { argus_create(sensor_id, width, height, fps) };
+                    if ctx.is_null() {
+                        tracing::error!("argus_create failed");
+                        return;
+                    }
+                    tracing::info!(
+                        "Argus capture started: {}x{} @ {} fps (MAILBOX mode)",
+                        width,
+                        height,
+                        fps
+                    );
+
+                    let mut buf = vec![0u8; frame_size];
+
+                    loop {
+                        // Check for stop signal (non-blocking)
+                        if stop_rx.try_recv().is_ok() {
+                            break;
+                        }
+
+                        let mut argus_ts_ns: i64 = 0;
+                        let written = unsafe {
+                            argus_acquire_frame(
+                                ctx,
+                                buf.as_mut_ptr(),
+                                buf.len() as u32,
+                                &mut argus_ts_ns,
+                            )
                         };
 
-                        tracing::info!(
-                            "capturing from {} as RG10 {}x{} @ {} fps with {} buffers",
-                            device_path,
-                            width,
-                            height,
-                            fps,
-                            buffer_count
-                        );
-
-                        while !stop_capture.load(Ordering::Relaxed) {
-                            let (data, _meta) = match stream.next() {
-                                Ok(frame) => frame,
-                                Err(error) => {
-                                    tracing::error!("V4L2 capture failed: {error}");
-                                    break;
-                                }
-                            };
-
-                            let ts = timestamp_from_sync(&sync_rx);
-                            let _ = frame_tx.try_send((ts, data.to_vec()));
+                        if written < 0 {
+                            tracing::error!("argus_acquire_frame failed");
+                            break;
                         }
-                    })?;
+
+                        // Convert Argus monotonic timestamp to wall-clock DateTime.
+                        // We take both clocks at the same moment to compute the offset.
+                        let frame_ts = mono_ns_to_utc(argus_ts_ns);
+
+                        // Also consume GPIO SYNC if available (for cross-check).
+                        if let Ok(sync_ns) = sync_rx.try_recv() {
+                            let mut tp = libc::timespec { tv_sec: 0, tv_nsec: 0 };
+                            unsafe { libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut tp) };
+                            let mono_now =
+                                tp.tv_sec as i64 * 1_000_000_000 + tp.tv_nsec as i64;
+                            let sync_age_us = (mono_now - sync_ns) / 1000;
+                            tracing::debug!("GPIO SYNC age at frame delivery: {}us", sync_age_us);
+                        }
+
+                        let _ = frame_tx.try_send((frame_ts, buf[..written as usize].to_vec()));
+                    }
+
+                    unsafe { argus_destroy(ctx) };
+                })?;
 
             Ok(Self {
                 frame_rx,
-                stop,
+                stop_tx,
                 capture_thread: Some(capture_thread),
                 width,
                 height,
@@ -124,7 +161,7 @@ mod imp {
 
     impl Drop for CsiColorCamera {
         fn drop(&mut self) {
-            self.stop.store(true, Ordering::Relaxed);
+            let _ = self.stop_tx.try_send(());
             if let Some(handle) = self.capture_thread.take() {
                 let _ = handle.join();
             }
@@ -139,95 +176,20 @@ mod imp {
         }
     }
 
-    fn configure_format(
-        device: &mut Device,
-        width: u32,
-        height: u32,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        let format = Format::new(width, height, FourCC::new(b"RG10"));
-        let applied = device.set_format(&format)?;
-        tracing::info!(
-            "camera format={} {}x{} bytes_per_line={} size_image={}",
-            applied.fourcc.str().unwrap_or("unknown"),
-            applied.width,
-            applied.height,
-            applied.stride,
-            applied.size
-        );
-        Ok(())
+    // -----------------------------------------------------------------------
+    // Helpers
+    // -----------------------------------------------------------------------
+
+    /// Convert a CLOCK_MONOTONIC nanosecond timestamp (from Argus) to UTC.
+    fn mono_ns_to_utc(mono_ns: i64) -> DateTime<Utc> {
+        let mut tp = libc::timespec { tv_sec: 0, tv_nsec: 0 };
+        unsafe { libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut tp) };
+        let mono_now_ns = tp.tv_sec as i64 * 1_000_000_000 + tp.tv_nsec as i64;
+        let age_ns = mono_now_ns - mono_ns;
+        Utc::now() - chrono::Duration::nanoseconds(age_ns)
     }
 
-    fn configure_controls(device: &Device, fps: u32) -> Result<(), Box<dyn std::error::Error>> {
-        set_i64_control(
-            device,
-            CONTROL_FRAME_RATE,
-            i64::from(fps) * 1_000_000,
-            "frame_rate",
-        )?;
-
-        Ok(())
-    }
-
-    fn set_i64_control(
-        device: &Device,
-        id: u32,
-        value: i64,
-        name: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        device.set_control(control::Control {
-            id,
-            value: control::Value::Integer(value),
-        })?;
-        tracing::info!("camera {name}={value}");
-        Ok(())
-    }
-
-    fn set_bool_control(
-        device: &Device,
-        id: u32,
-        value: bool,
-        name: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        device.set_control(control::Control {
-            id,
-            value: control::Value::Boolean(value),
-        })?;
-        tracing::info!("camera {name}={value}");
-        Ok(())
-    }
-
-    fn camera_device_path(sensor_id: u32) -> String {
-        std::env::var("CAM_VIDEO_DEVICE").unwrap_or_else(|_| format!("/dev/video{sensor_id}"))
-    }
-
-    fn capture_buffers() -> u32 {
-        std::env::var("CAM_CAPTURE_BUFFERS")
-            .ok()
-            .and_then(|value| value.parse::<u32>().ok())
-            .filter(|buffers| *buffers > 1)
-            .unwrap_or(DEFAULT_CAPTURE_BUFFERS)
-    }
-
-    fn timestamp_from_sync(sync_rx: &Receiver<i64>) -> DateTime<Utc> {
-        match sync_rx.try_recv() {
-            Ok(mono_ns) => {
-                let mut tp = libc::timespec {
-                    tv_sec: 0,
-                    tv_nsec: 0,
-                };
-                unsafe { libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut tp) };
-                let mono_now = tp.tv_sec as i64 * 1_000_000_000 + tp.tv_nsec as i64;
-                let age_ns = mono_now - mono_ns;
-                tracing::debug!("SYNC age: {}us", age_ns / 1000);
-                Utc::now() - chrono::Duration::nanoseconds(age_ns)
-            }
-            Err(_) => {
-                tracing::error!("no SYNC timestamp, using Utc::now()");
-                Utc::now()
-            }
-        }
-    }
-
+    /// Listens for rising edges on the camera SYNC GPIO pin.
     fn gpio_sync_listener(chip: &str, line: u32, ts: &mpsc::Sender<i64>) {
         let chip_path = format!("/dev/{chip}");
         let chip_fd = match File::open(&chip_path) {
@@ -311,6 +273,10 @@ mod imp {
 #[cfg(target_os = "linux")]
 pub use imp::CsiColorCamera;
 
+// -----------------------------------------------------------------------
+// Stub for non-Linux (dev machines)
+// -----------------------------------------------------------------------
+
 #[cfg(not(target_os = "linux"))]
 pub struct CsiColorCamera;
 
@@ -327,24 +293,13 @@ impl CsiColorCamera {
         Err("CsiColorCamera is only supported on Linux".into())
     }
 
-    pub fn width(&self) -> u32 {
-        0
-    }
-
-    pub fn height(&self) -> u32 {
-        0
-    }
-
-    pub fn recv_frame(&mut self) -> Option<(DateTime<Utc>, Vec<u8>)> {
-        None
-    }
+    pub fn width(&self) -> u32 { 0 }
+    pub fn height(&self) -> u32 { 0 }
+    pub fn recv_frame(&mut self) -> Option<(DateTime<Utc>, Vec<u8>)> { None }
 }
 
 #[cfg(not(target_os = "linux"))]
 impl crate::CameraHw for CsiColorCamera {
     type Frame = Vec<u8>;
-
-    fn recv_frame(&mut self) -> Option<(DateTime<Utc>, Vec<u8>)> {
-        None
-    }
+    fn recv_frame(&mut self) -> Option<(DateTime<Utc>, Vec<u8>)> { None }
 }
