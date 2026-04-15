@@ -4,13 +4,19 @@ use chrono::{DateTime, Utc};
 mod imp {
     use super::*;
     use gstreamer::prelude::*;
+    use gstreamer::MessageView;
     use gstreamer_app::AppSink;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::Arc;
+    use std::thread::{self, JoinHandle};
 
     use crate::CameraHw;
 
     pub struct CsiColorCamera {
         frame_rx: std::sync::mpsc::Receiver<(DateTime<Utc>, Vec<u8>)>,
         pipeline: gstreamer::Pipeline,
+        stop: Arc<AtomicBool>,
+        bus_thread: Option<JoinHandle<()>>,
         width: u32,
         height: u32,
     }
@@ -33,6 +39,7 @@ mod imp {
                  video/x-bayer,format=rggb,width={width},height={height},framerate={fps}/1 ! \
                  appsink name=sink sync=false",
             );
+            tracing::info!("camera pipeline: {pipeline_str}");
 
             let pipeline = gstreamer::parse::launch(&pipeline_str)?
                 .downcast::<gstreamer::Pipeline>()
@@ -58,6 +65,7 @@ mod imp {
             }
 
             let (frame_tx, frame_rx) = std::sync::mpsc::sync_channel(1);
+            let stop = Arc::new(AtomicBool::new(false));
 
             sink.set_callbacks(
                 gstreamer_app::AppSinkCallbacks::builder()
@@ -80,10 +88,49 @@ mod imp {
             );
 
             pipeline.set_state(gstreamer::State::Playing)?;
+            let bus = pipeline.bus().ok_or("missing pipeline bus")?;
+            let bus_stop = Arc::clone(&stop);
+            let bus_thread = thread::Builder::new()
+                .name("gst-bus".into())
+                .spawn(move || {
+                    while !bus_stop.load(Ordering::Relaxed) {
+                        let Some(message) =
+                            bus.timed_pop(Some(gstreamer::ClockTime::from_mseconds(200)))
+                        else {
+                            continue;
+                        };
+
+                        match message.view() {
+                            MessageView::Error(err) => {
+                                let src = err.src().map(|s| s.path_string()).unwrap_or_default();
+                                tracing::error!(
+                                    "GStreamer error from {src}: {} ({:?})",
+                                    err.error(),
+                                    err.debug()
+                                );
+                            }
+                            MessageView::Warning(warn) => {
+                                let src = warn.src().map(|s| s.path_string()).unwrap_or_default();
+                                tracing::warn!(
+                                    "GStreamer warning from {src}: {} ({:?})",
+                                    warn.error(),
+                                    warn.debug()
+                                );
+                            }
+                            MessageView::Eos(..) => {
+                                tracing::warn!("GStreamer pipeline reached EOS");
+                                break;
+                            }
+                            _ => {}
+                        }
+                    }
+                })?;
 
             Ok(Self {
                 frame_rx,
                 pipeline,
+                stop,
+                bus_thread: Some(bus_thread),
                 width,
                 height,
             })
@@ -109,7 +156,11 @@ mod imp {
 
     impl Drop for CsiColorCamera {
         fn drop(&mut self) {
+            self.stop.store(true, Ordering::Relaxed);
             let _ = self.pipeline.set_state(gstreamer::State::Null);
+            if let Some(handle) = self.bus_thread.take() {
+                let _ = handle.join();
+            }
         }
     }
 
