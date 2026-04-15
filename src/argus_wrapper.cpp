@@ -157,9 +157,12 @@ int32_t argus_acquire_frame(ArgusContext* ctx,
     IFrame* iFrame = interface_cast<IFrame>(frame);
     if (!iFrame) return -1;
 
-    // Argus sensor timestamp (monotonic, nanoseconds)
-    if (timestamp_ns)
-        *timestamp_ns = (int64_t)iFrame->getTimestamp();
+    // Record monotonic time at frame delivery (CLOCK_MONOTONIC, nanoseconds)
+    if (timestamp_ns) {
+        struct timespec tp;
+        clock_gettime(CLOCK_MONOTONIC, &tp);
+        *timestamp_ns = (int64_t)tp.tv_sec * 1000000000LL + tp.tv_nsec;
+    }
 
     // --- Map frame pixels via NvBufSurface ---
     NV::IImageNativeBuffer* iNative =
