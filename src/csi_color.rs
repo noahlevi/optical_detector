@@ -148,7 +148,7 @@ mod imp {
         let applied = device.set_format(&format)?;
         tracing::info!(
             "camera format={} {}x{} bytes_per_line={} size_image={}",
-            applied.fourcc.str(),
+            applied.fourcc.str().unwrap_or("unknown"),
             applied.width,
             applied.height,
             applied.stride,
