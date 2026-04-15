@@ -210,13 +210,22 @@ int32_t argus_acquire_frame(ArgusContext* ctx,
     uint32_t uv_size = y_size / 2;
     uint32_t total   = y_size + uv_size;
 
+    // Read actual strides from surface (may differ from width due to alignment)
+    uint32_t y_stride  = surf->surfaceList[0].planeParams.pitch[0];
+    uint32_t uv_stride = surf->surfaceList[0].planeParams.pitch[1];
+    fprintf(stderr, "[argus] y_stride=%u uv_stride=%u\n", y_stride, uv_stride);
+
     int32_t written = -1;
     if (buffer_size >= total) {
-        void* y_addr  = surf->surfaceList[0].mappedAddr.addr[0];
-        void* uv_addr = surf->surfaceList[0].mappedAddr.addr[1];
+        uint8_t* y_addr  = (uint8_t*)surf->surfaceList[0].mappedAddr.addr[0];
+        uint8_t* uv_addr = (uint8_t*)surf->surfaceList[0].mappedAddr.addr[1];
         if (y_addr && uv_addr) {
-            memcpy(buffer,          y_addr,  y_size);
-            memcpy(buffer + y_size, uv_addr, uv_size);
+            // Copy Y plane row by row to strip padding
+            for (uint32_t row = 0; row < ctx->height; row++)
+                memcpy(buffer + row * ctx->width, y_addr + row * y_stride, ctx->width);
+            // Copy UV plane row by row (height/2 rows)
+            for (uint32_t row = 0; row < ctx->height / 2; row++)
+                memcpy(buffer + y_size + row * ctx->width, uv_addr + row * uv_stride, ctx->width);
             written = (int32_t)total;
         }
     }
