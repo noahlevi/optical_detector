@@ -35,5 +35,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "frame={frame_idx} bytes={} latency_ms={latency_ms:.3} max_latency_ms={max_latency_ms:.3}",
             frame.len(),
         );
+
+        // Save first frame as raw NV12 for inspection
+        if frame_idx == 1 {
+            std::fs::write("frame.nv12", &frame)?;
+            println!("saved frame.nv12 — convert with: ffmpeg -f rawvideo -pix_fmt nv12 -s 1920x1080 -i frame.nv12 frame.png");
+        }
     }
 }
