@@ -119,12 +119,20 @@ ArgusContext* argus_create(uint32_t sensor_id,
     }
     iRequest->enableOutputStream(ctx->stream.get());
 
-    // Frame rate
+    // Frame rate + exposure
     ISourceSettings* iSource =
         interface_cast<ISourceSettings>(iRequest->getSourceSettings());
     if (iSource) {
         uint64_t dur_ns = 1000000000ULL / fps;
         iSource->setFrameDurationRange(Range<uint64_t>(dur_ns, dur_ns));
+
+        // Exposure: default 30ms, override with CAM_EXPOSURE_US env var
+        const char* exp_env = getenv("CAM_EXPOSURE_US");
+        uint64_t exposure_ns = exp_env
+            ? (uint64_t)atol(exp_env) * 1000ULL
+            : 30000000ULL; // 30ms default
+        iSource->setExposureTimeRange(Range<uint64_t>(exposure_ns, exposure_ns));
+        fprintf(stderr, "[argus] exposure=%.1fms\n", exposure_ns / 1e6);
     }
 
     // --- Start repeating captures ---
