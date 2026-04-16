@@ -36,15 +36,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             frame.len(),
         );
 
-        // Save first frame as PPM for visual inspection (RGB, no extra deps)
+        // Save first frame as raw NV12 for visual inspection
         if frame_idx == 1 {
-            let w = day_cam_hw.width();
-            let h = day_cam_hw.height();
-            let header = format!("P6\n{w} {h}\n255\n");
-            let mut ppm = header.into_bytes();
-            ppm.extend_from_slice(&frame);
-            std::fs::write("frame.ppm", &ppm)?;
-            println!("saved frame.ppm — open directly in Preview/GIMP/feh");
+            std::fs::write("frame.nv12", &frame)?;
+            println!("saved frame.nv12 — convert with: ffmpeg -f rawvideo -pix_fmt nv12 -s 1920x1080 -i frame.nv12 frame.png");
         }
     }
 }

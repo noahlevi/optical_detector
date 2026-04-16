@@ -76,7 +76,7 @@ mod imp {
             // Channel: stop signal
             let (stop_tx, stop_rx) = mpsc::sync_channel::<()>(1);
 
-            let nv12_size = (width * height * 3 / 2) as usize;
+            let frame_size = (width * height * 3 / 2) as usize; // NV12
 
             let capture_thread = thread::Builder::new()
                 .name("argus-capture".into())
@@ -94,7 +94,7 @@ mod imp {
                         fps
                     );
 
-                    let mut nv12_buf = vec![0u8; nv12_size];
+                    let mut buf = vec![0u8; frame_size];
 
                     loop {
                         // Check for stop signal (non-blocking)
@@ -106,8 +106,8 @@ mod imp {
                         let written = unsafe {
                             argus_acquire_frame(
                                 ctx,
-                                nv12_buf.as_mut_ptr(),
-                                nv12_buf.len() as u32,
+                                buf.as_mut_ptr(),
+                                buf.len() as u32,
                                 &mut argus_ts_ns,
                             )
                         };
@@ -131,12 +131,7 @@ mod imp {
                             tracing::debug!("GPIO SYNC age at frame delivery: {}us", sync_age_us);
                         }
 
-                        let rgb = nv12_to_rgb(
-                            &nv12_buf[..written as usize],
-                            width as usize,
-                            height as usize,
-                        );
-                        let _ = frame_tx.try_send((frame_ts, rgb));
+                        let _ = frame_tx.try_send((frame_ts, buf[..written as usize].to_vec()));
                     }
 
                     unsafe { argus_destroy(ctx) };
@@ -184,33 +179,6 @@ mod imp {
     // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
-
-    /// Convert NV12 (full-range YUV 4:2:0) to packed RGB.
-    /// Output: width × height × 3 bytes, row-major, R-G-B order.
-    fn nv12_to_rgb(nv12: &[u8], width: usize, height: usize) -> Vec<u8> {
-        let y_plane  = &nv12[..width * height];
-        let uv_plane = &nv12[width * height..];
-        let mut rgb  = vec![0u8; width * height * 3];
-
-        for row in 0..height {
-            for col in 0..width {
-                let y  = y_plane[row * width + col] as i32;
-                let uv = (row / 2) * width + (col & !1);
-                let u  = uv_plane[uv]     as i32 - 128;
-                let v  = uv_plane[uv + 1] as i32 - 128;
-
-                let r = (y + 1402 * v / 1000).clamp(0, 255) as u8;
-                let g = (y - 344  * u / 1000 - 714 * v / 1000).clamp(0, 255) as u8;
-                let b = (y + 1772 * u / 1000).clamp(0, 255) as u8;
-
-                let i = (row * width + col) * 3;
-                rgb[i]     = r;
-                rgb[i + 1] = g;
-                rgb[i + 2] = b;
-            }
-        }
-        rgb
-    }
 
     /// Convert a CLOCK_MONOTONIC nanosecond timestamp (from Argus) to UTC.
     fn mono_ns_to_utc(mono_ns: i64) -> DateTime<Utc> {
