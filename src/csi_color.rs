@@ -60,15 +60,19 @@ mod imp {
             gpio_chip: &str,
             gpio_line: u32,
         ) -> Result<Self, Box<dyn std::error::Error>> {
-            // GPIO SYNC listener
+            // GPIO SYNC listener (disabled when DISABLE_GPIO=1)
             let (sync_tx, sync_rx) = mpsc::channel::<i64>();
-            let chip = gpio_chip.to_string();
-            thread::Builder::new()
-                .name("gpio-sync".into())
-                .spawn(move || {
-                    gpio_sync_listener(&chip, gpio_line, &sync_tx);
-                    tracing::warn!("GPIO SYNC listener exited");
-                })?;
+            if std::env::var("DISABLE_GPIO").as_deref() != Ok("1") {
+                let chip = gpio_chip.to_string();
+                thread::Builder::new()
+                    .name("gpio-sync".into())
+                    .spawn(move || {
+                        gpio_sync_listener(&chip, gpio_line, &sync_tx);
+                        tracing::warn!("GPIO SYNC listener exited");
+                    })?;
+            } else {
+                tracing::info!("GPIO SYNC disabled (DISABLE_GPIO=1)");
+            }
 
             // Channel: capture thread → recv_frame()
             let (frame_tx, frame_rx) = mpsc::sync_channel::<(DateTime<Utc>, Vec<u8>)>(1);

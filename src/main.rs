@@ -59,8 +59,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         frame_idx += 1;
         println!(
-            "frame={frame_idx} bytes={} latency_ms={latency_ms:.3} max_latency_ms={max_latency_ms:.3}",
-            frame.len(),
+            "frame={frame_idx} ts={} latency_ms={latency_ms:.3} max_latency_ms={max_latency_ms:.3}",
+            frame_ts.format("%H:%M:%S%.6f"),
         );
 
         // Save first stable frame after AE warmup
