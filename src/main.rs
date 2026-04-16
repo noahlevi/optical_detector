@@ -18,9 +18,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut frame_idx = 0_u64;
     let mut max_latency_ms = 0.0_f64;
+    let mut last_frame: Vec<u8> = Vec::new();
 
     loop {
-        let (frame_ts, frame) = day_cam_hw.recv_frame().ok_or("camera stream ended")?;
+        let (frame_ts, frame) = match day_cam_hw.recv_frame() {
+            Some(f) => f,
+            None => {
+                // Camera stopped — save last frame
+                if !last_frame.is_empty() {
+                    std::fs::write("frame_last.nv12", &last_frame)?;
+                    println!("saved frame_last.nv12");
+                }
+                break;
+            }
+        };
+
         let latency_us = (Utc::now() - frame_ts)
             .num_microseconds()
             .ok_or("latency overflow")?;
@@ -36,10 +48,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             frame.len(),
         );
 
-        // Save first frame as raw NV12 for visual inspection
         if frame_idx == 1 {
-            std::fs::write("frame.nv12", &frame)?;
-            println!("saved frame.nv12 — convert with: ffmpeg -f rawvideo -pix_fmt nv12 -s 1920x1080 -i frame.nv12 frame.png");
+            std::fs::write("frame_first.nv12", &frame)?;
+            println!("saved frame_first.nv12");
         }
+
+        last_frame = frame;
     }
+
+    Ok(())
 }
