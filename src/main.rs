@@ -16,6 +16,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         day_cam_hw.height()
     );
 
+    // Number of frames to skip while auto-exposure stabilises.
+    // Override with AE_WARMUP_FRAMES env var.
+    let warmup: u64 = std::env::var("AE_WARMUP_FRAMES")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(100);
+
     let mut frame_idx = 0_u64;
     let mut max_latency_ms = 0.0_f64;
     let mut last_frame: Vec<u8> = Vec::new();
@@ -24,7 +31,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let (frame_ts, frame) = match day_cam_hw.recv_frame() {
             Some(f) => f,
             None => {
-                // Camera stopped — save last frame
                 if !last_frame.is_empty() {
                     std::fs::write("frame_last.nv12", &last_frame)?;
                     println!("saved frame_last.nv12");
@@ -48,9 +54,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             frame.len(),
         );
 
-        if frame_idx == 1 {
+        // Save first stable frame after AE warmup
+        if frame_idx == warmup + 1 {
             std::fs::write("frame_first.nv12", &frame)?;
-            println!("saved frame_first.nv12");
+            println!("saved frame_first.nv12 (after {warmup} warmup frames)");
         }
 
         last_frame = frame;
