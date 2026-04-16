@@ -216,7 +216,11 @@ int32_t argus_acquire_frame(ArgusContext* ctx,
     // Read actual strides from surface (may differ from width due to alignment)
     uint32_t y_stride  = surf->surfaceList[0].planeParams.pitch[0];
     uint32_t uv_stride = surf->surfaceList[0].planeParams.pitch[1];
-    fprintf(stderr, "[argus] y_stride=%u uv_stride=%u\n", y_stride, uv_stride);
+    static bool stride_logged = false;
+    if (!stride_logged) {
+        fprintf(stderr, "[argus] y_stride=%u uv_stride=%u\n", y_stride, uv_stride);
+        stride_logged = true;
+    }
 
     int32_t written = -1;
     if (buffer_size >= total) {
