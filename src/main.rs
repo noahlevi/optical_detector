@@ -1,4 +1,5 @@
 use chrono::Utc;
+use std::sync::{Arc, Mutex};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
@@ -23,20 +24,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .and_then(|v| v.parse().ok())
         .unwrap_or(100);
 
+    // Shared slot for the latest frame — writer thread drains it asynchronously.
+    let save_slot: Arc<Mutex<Option<Vec<u8>>>> = Arc::new(Mutex::new(None));
+    let save_slot_writer = Arc::clone(&save_slot);
+
+    std::thread::Builder::new()
+        .name("frame-save".into())
+        .spawn(move || loop {
+            let data = save_slot_writer.lock().unwrap().take();
+            if let Some(frame) = data {
+                let _ = std::fs::write("frame_last.nv12.tmp", &frame);
+                let _ = std::fs::rename("frame_last.nv12.tmp", "frame_last.nv12");
+            }
+            std::thread::sleep(std::time::Duration::from_millis(16));
+        })?;
+
     let mut frame_idx = 0_u64;
     let mut max_latency_ms = 0.0_f64;
-    let mut last_frame: Vec<u8> = Vec::new();
 
     loop {
         let (frame_ts, frame) = match day_cam_hw.recv_frame() {
             Some(f) => f,
-            None => {
-                if !last_frame.is_empty() {
-                    std::fs::write("frame_last.nv12", &last_frame)?;
-                    println!("saved frame_last.nv12");
-                }
-                break;
-            }
+            None => break,
         };
 
         let latency_us = (Utc::now() - frame_ts)
@@ -60,14 +69,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("saved frame_first.nv12 (after {warmup} warmup frames)");
         }
 
-        // Atomic overwrite every frame after warmup — survives Ctrl+C intact.
-        // Write to tmp first, then rename (rename is atomic on Linux).
+        // Hand latest frame to save thread — non-blocking, no latency impact
         if frame_idx > warmup {
-            std::fs::write("frame_last.nv12.tmp", &frame)?;
-            std::fs::rename("frame_last.nv12.tmp", "frame_last.nv12")?;
+            *save_slot.lock().unwrap() = Some(frame);
         }
-
-        last_frame = frame;
     }
 
     Ok(())
