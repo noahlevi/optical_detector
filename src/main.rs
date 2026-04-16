@@ -60,6 +60,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("saved frame_first.nv12 (after {warmup} warmup frames)");
         }
 
+        // Overwrite every frame after warmup — survives Ctrl+C
+        if frame_idx > warmup {
+            std::fs::write("frame_last.nv12", &frame)?;
+        }
+
         last_frame = frame;
     }
 
