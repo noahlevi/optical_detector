@@ -126,13 +126,16 @@ ArgusContext* argus_create(uint32_t sensor_id,
         uint64_t dur_ns = 1000000000ULL / fps;
         iSource->setFrameDurationRange(Range<uint64_t>(dur_ns, dur_ns));
 
-        // Exposure: default 30ms, override with CAM_EXPOSURE_US env var
+        // Exposure: let AE run freely by default.
+        // Override with CAM_EXPOSURE_US to pin a fixed exposure (disables AE).
         const char* exp_env = getenv("CAM_EXPOSURE_US");
-        uint64_t exposure_ns = exp_env
-            ? (uint64_t)atol(exp_env) * 1000ULL
-            : 30000000ULL; // 30ms default
-        iSource->setExposureTimeRange(Range<uint64_t>(exposure_ns, exposure_ns));
-        fprintf(stderr, "[argus] exposure=%.1fms\n", exposure_ns / 1e6);
+        if (exp_env) {
+            uint64_t exposure_ns = (uint64_t)atol(exp_env) * 1000ULL;
+            iSource->setExposureTimeRange(Range<uint64_t>(exposure_ns, exposure_ns));
+            fprintf(stderr, "[argus] fixed exposure=%.1fms (AE disabled)\n", exposure_ns / 1e6);
+        } else {
+            fprintf(stderr, "[argus] AE enabled (auto exposure)\n");
+        }
     }
 
     // --- Start repeating captures ---
