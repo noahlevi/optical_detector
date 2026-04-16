@@ -60,9 +60,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("saved frame_first.nv12 (after {warmup} warmup frames)");
         }
 
-        // Overwrite every frame after warmup — survives Ctrl+C
+        // Atomic overwrite every frame after warmup — survives Ctrl+C intact.
+        // Write to tmp first, then rename (rename is atomic on Linux).
         if frame_idx > warmup {
-            std::fs::write("frame_last.nv12", &frame)?;
+            std::fs::write("frame_last.nv12.tmp", &frame)?;
+            std::fs::rename("frame_last.nv12.tmp", "frame_last.nv12")?;
         }
 
         last_frame = frame;
